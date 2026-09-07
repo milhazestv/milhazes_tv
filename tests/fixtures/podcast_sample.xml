@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Programa de teste</title>
+    <item>
+      <title>Episodio com dois intervenientes</title>
+      <guid>fixture-0001</guid>
+      <link>https://example.invalid/ep1</link>
+      <pubDate>Tue, 02 Sep 2026 22:10:00 +0000</pubDate>
+      <itunes:duration>18:49</itunes:duration>
+      <description>&lt;p&gt;Analise de X e Y.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Episodio com duracao em segundos</title>
+      <guid>fixture-0002</guid>
+      <link>https://example.invalid/ep2</link>
+      <pubDate>Tue, 09 Sep 2026 22:05:00 +0000</pubDate>
+      <itunes:duration>1520</itunes:duration>
+      <description>Comentario de Y.</description>
+    </item>
+    <item>
+      <title>Episodio com hora completa</title>
+      <guid>fixture-0003</guid>
+      <link>https://example.invalid/ep3</link>
+      <pubDate>Sun, 14 Sep 2026 13:00:00 +0000</pubDate>
+      <itunes:duration>1:02:30</itunes:duration>
+      <description>Especial.</description>
+    </item>
+    <item>
+      <title>Episodio sem duracao, deve ser descartado</title>
+      <guid>fixture-0004</guid>
+      <link>https://example.invalid/ep4</link>
+      <pubDate>Sun, 21 Sep 2026 13:00:00 +0000</pubDate>
+      <description>Sem itunes:duration.</description>
+    </item>
+  </channel>
+</rss>

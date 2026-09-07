@@ -1,0 +1,50 @@
+name: recolha
+
+on:
+  schedule:
+    # 05:40 UTC. Hora deliberadamente sem relacao com o fuso de quem mantem
+    # o repositorio, e todos os commits ficam com timestamp UTC.
+    - cron: '40 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: recolha
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    env:
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Testes
+        run: python -m unittest discover -s tests
+
+      - name: Recolher
+        env:
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+        run: python -m collector.main
+
+      - name: Publicar alteracoes
+        run: |
+          if [ -z "$(git status --porcelain docs/data)" ]; then
+            echo "sem alteracoes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data
+          git commit -m "dados: recolha de $(date -u +%Y-%m-%d)"
+          git push

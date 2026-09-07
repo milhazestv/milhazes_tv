@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Milhazes TV</title>
+<meta name="description" content="Contagem publica e auditavel do tempo de emissao dedicado a temas recorrentes na televisao portuguesa.">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="masthead">
+  <h1>Milhazes TV</h1>
+  <p class="standfirst">Contagem do tempo de emissao dedicado a temas recorrentes na televisao portuguesa. Recolha automatica, dataset publico, sem opiniao.</p>
+</header>
+
+<nav class="topics" id="topics" aria-label="Temas"></nav>
+
+<main id="panel" aria-live="polite">
+  <p class="loading">A carregar os dados.</p>
+</main>
+
+<footer class="colofon">
+  <div class="colofon-block">
+    <h2>Como e medido</h2>
+    <p>Cada registo corresponde a um bloco emitido com data e duracao publicadas pelo proprio canal. Nada e estimado a olho.</p>
+    <p>Quando um bloco tem mais do que um interveniente, a leitura por omissao divide o tempo em partes iguais. A leitura integral atribui o bloco inteiro a cada um. As duas estao no dataset.</p>
+  </div>
+  <div class="colofon-block">
+    <h2>Verificar</h2>
+    <p><a href="data/appearances.json" download>Descarregar o dataset completo</a></p>
+    <p><a href="METHODOLOGY.html">Metodologia e limitacoes</a></p>
+    <p id="generated"></p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
