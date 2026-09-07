@@ -19,6 +19,7 @@
   var monthNameLabel = MTV.monthNameLabel;
   var capitalize = MTV.capitalize;
   var el = MTV.el;
+  var nameHtml = MTV.nameHtml;
 
   // period.id -> { tab: texto curto no botão, frase: texto médio da frase }
   var PERIODOS = [
@@ -151,7 +152,7 @@
       dot.style.background = CORES[i % CORES.length];
       legend.appendChild(el("li", {}, [
         dot,
-        el("span", { class: "pie-legend-label", text: e.label }),
+        el("span", { class: "pie-legend-label", html: nameHtml(e.label) }),
         el("span", { class: "pie-legend-value", text: pct + "% · " + humanDuration(e.seconds) })
       ]));
     });
@@ -174,7 +175,7 @@
         type: "button",
         role: "tab",
         "aria-selected": String(topic.id === state.topic),
-        text: topic.name
+        html: nameHtml(topic.name)
       });
       tab.addEventListener("click", function () {
         state.topic = topic.id;
@@ -188,7 +189,7 @@
   function renderEmpty(panel, topic) {
     panel.appendChild(el("div", { class: "empty" }, [
       el("h2", { text: "Ainda sem dados" }),
-      el("p", { text: "Ainda não há nada registado para " + topic.name + "." })
+      el("p", { html: "Ainda não há nada registado para " + nameHtml(topic.name) + "." })
     ]));
   }
 
@@ -222,20 +223,24 @@
       ? capitalize(periodo.frase) + " já tivemos"
       : capitalize(periodo.frase) + " ainda não houve";
 
-    panel.appendChild(el("p", { class: "hero-lead", text: frase }));
-    panel.appendChild(el("p", {
+    // O número grande vive num cartão próprio, para poder ser destacado
+    // do resto da página pelo CSS sem depender da ordem dos irmãos.
+    var card = el("div", { class: "hero-card" });
+    card.appendChild(el("p", { class: "hero-lead", text: frase }));
+    card.appendChild(el("p", {
       class: "hero-figure",
       text: totals.seconds > 0 ? humanDuration(totals.seconds) : "nada registado"
     }));
-    panel.appendChild(el("p", { class: "hero-tail", text: "de " + topic.name + " na TV." }));
+    card.appendChild(el("p", { class: "hero-tail", html: "de " + nameHtml(topic.name) + " na TV." }));
 
     if (totals.seconds > 0) {
       var vezes = totals.blocks === 1 ? "1 vez" : totals.blocks + " vezes";
-      panel.appendChild(el("p", {
+      card.appendChild(el("p", {
         class: "hero-caption",
         text: "Foi para o ar " + vezes + " " + periodo.frase + "."
       }));
     }
+    panel.appendChild(card);
 
     return totals;
   }
@@ -275,7 +280,7 @@
       fill.style.width = (ratio * 100).toFixed(1) + "%";
       fill.style.background = CORES[i % CORES.length];
       list.appendChild(el("li", {}, [
-        el("span", { class: "bar-label", text: e.label }),
+        el("span", { class: "bar-label", html: nameHtml(e.label) }),
         el("span", { class: "bar-track" }, [fill]),
         el("span", {
           class: "bar-value",
@@ -392,8 +397,14 @@
       var year = month.month.slice(0, 4);
       if (!seenYears[year]) {
         seenYears[year] = true;
-        svg += '<text class="axis" x="' + (x + slot / 2).toFixed(1) +
-          '" y="' + (height - 9) + '" text-anchor="middle">' + year + "</text>";
+        // O primeiro e o último rótulo ancoram-se para dentro: centrados,
+        // metade do texto cairia fora do viewBox e o ano aparecia cortado.
+        var cx = x + slot / 2;
+        var anchor = "middle";
+        if (cx < 18) { cx = 1; anchor = "start"; }
+        else if (cx > width - 18) { cx = width - 1; anchor = "end"; }
+        svg += '<text class="axis" x="' + cx.toFixed(1) +
+          '" y="' + (height - 9) + '" text-anchor="' + anchor + '">' + year + "</text>";
       }
     });
 

@@ -1,140 +1,188 @@
-/* Sem tipos de letra externos, sem CDN, sem analytics.
-   O site nao faz um unico pedido a terceiros: quem o visita nao fica
-   registado em lado nenhum. Tambem e por isso que nao ha bibliotecas
-   de graficos, os graficos sao SVG gerado a mao. */
+/* Milhazes TV — folha de estilo única.
+   Aspeto: papel pontilhado, autocolantes torcidos, rabiscos. O texto
+   mantém-se sóbrio: o humor está na embalagem, nunca nos números.
+
+   Tipos de letra: Google Fonts (Work Sans, Space Mono, Caveat), pedidos
+   nas páginas HTML. Não há bibliotecas de gráficos: os gráficos são SVG
+   gerado à mão pelo app.js / calendario.js.
+
+   Todas as classes usadas pelo JS estão aqui; não renomear sem mudar o JS. */
 
 :root {
-  --ink: #16181c;
-  --ink-soft: #565b63;
-  --paper: #e4e5e0;
-  --panel: #f2f2ef;
-  --rule: #b7bab2;
-  --bar-1: #2e6f7d;
-  --bar-2: #a8791a;
-  --bar-3: #6d5591;
-  --bar-4: #4a7346;
-  --bar-5: #9c4f4f;
-  --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --ink: #23211C;
+  --ink-soft: #55514A;
+  --paper: #F7F3E8;
+  --panel: #FFFFFF;
+  --rule: #D8D2C0;
+  --dot: #DED8C6;
+  --mute: #E3DCC8;
+
+  /* Cores dos gráficos, pela ordem que o JS usa (CORES = bar-1..bar-5). */
+  --bar-1: #F2C246;
+  --bar-2: #4E7C9B;
+  --bar-3: #B9432B;
+  --bar-4: #7FAE55;
+  --bar-5: #8A6BA1;
+
+  --sans: "Work Sans", ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --hand: "Caveat", "Segoe Script", cursive;
+
+  --sticker: 0 8px 20px rgba(35, 33, 28, 0.13);
+  --sticker-sm: 0 4px 10px rgba(35, 33, 28, 0.12);
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: var(--paper);
   color: var(--ink);
+  background-color: var(--paper);
+  background-image: radial-gradient(var(--dot) 1.1px, transparent 1.1px);
+  background-size: 22px 22px;
   font-family: var(--sans);
   font-size: 17px;
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
-a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a { color: var(--ink); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+a:hover { color: var(--bar-3); }
 a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
+/* Anotação à mão. Existe para as legendas irónicas que forem escritas
+   depois: <span class="nota">texto</span>. Não é usada por defeito. */
+.nota {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 1.45rem;
+  line-height: 1.1;
+  color: var(--bar-3);
+  display: inline-block;
+  transform: rotate(-5deg);
+}
+
+/* ---- cabeçalho ---------------------------------------------------- */
+
 .masthead {
-  max-width: 62rem;
+  max-width: 63rem;
   margin: 0 auto;
-  padding: 3.5rem 1.5rem 1.75rem;
+  padding: 3.2rem 1.5rem 1.5rem;
+}
+
+/* Marca e título são um só conjunto: a maçaroca é dimensionada pelo
+   tamanho do título e assenta na mesma linha de base, sem cartão nem
+   rotação, para que nada se leia como dois elementos soltos. */
+.brand {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.brand-mark { display: block; animation: sway 8s ease-in-out infinite; transform-origin: 50% 100%; }
+.brand-mark svg { display: block; width: auto; height: clamp(2.9rem, 8.8vw, 4.9rem); }
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-1.5deg); }
+  50% { transform: rotate(1.5deg); }
 }
 
 .masthead h1 {
   margin: 0;
-  font-size: clamp(2.1rem, 6vw, 3.4rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-size: clamp(2.1rem, 6.5vw, 3.6rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
   line-height: 1;
 }
 
+/* "Infotainment" aparece sempre em itálico, venha de onde vier o nome
+   do tema (ver MTV.nameHtml em common.js). */
+.brand h1 em, .topic-tab em, .hero-tail em, .bar-label em, .pie-legend-label em { font-style: italic; }
+
 .standfirst {
-  margin: 0.9rem 0 0;
-  max-width: 44ch;
+  margin: 1.1rem 0 0;
+  max-width: 46ch;
   color: var(--ink-soft);
 }
 
-/* Barras do padrao de teste como marcador de tema, nao como decoracao:
-   cada tema recebe uma cor e mantem-na em todo o site. */
+.breadcrumb {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+/* ---- temas: autocolantes torcidos --------------------------------- */
+
 .topics {
-  max-width: 62rem;
+  max-width: 63rem;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0.4rem 1.5rem 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  border-bottom: 1px solid var(--rule);
+  gap: 0.7rem;
 }
 
 .topic-tab {
   appearance: none;
-  border: 0;
-  background: none;
   font: inherit;
-  padding: 0.6rem 0.2rem 0.75rem;
-  margin-right: 1.25rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.5rem 1.1rem;
+  background: var(--panel);
   color: var(--ink-soft);
+  border: 2px solid var(--panel);
+  border-radius: 12px;
+  box-shadow: var(--sticker-sm);
   cursor: pointer;
-  border-bottom: 3px solid transparent;
-  margin-bottom: -1px;
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
+.topic-tab:nth-child(odd) { transform: rotate(-1.5deg); }
+.topic-tab:nth-child(even) { transform: rotate(1.2deg); }
+.topic-tab:hover { color: var(--ink); transform: rotate(0deg); }
+
 .topic-tab[aria-selected="true"] {
+  background: var(--bar-1);
   color: var(--ink);
-  font-weight: 600;
-  border-bottom-color: var(--bar-1);
+  box-shadow: 0 5px 14px rgba(35, 33, 28, 0.2);
 }
 
 main {
-  max-width: 62rem;
+  max-width: 63rem;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem 4rem;
+  padding: 2.2rem 1.5rem 4rem;
 }
+
+/* ---- períodos e leituras ------------------------------------------ */
 
 .period-selector {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.8rem;
 }
 
-.period-btn {
+.period-btn,
+.reading-btn {
   appearance: none;
   font: inherit;
   font-size: 0.9rem;
-  padding: 0.4rem 0.9rem;
+  padding: 0.35rem 0.95rem;
   background: transparent;
-  border: 1px solid var(--rule);
+  color: var(--ink);
+  border: 2px solid var(--ink);
   border-radius: 999px;
   cursor: pointer;
 }
 
-.period-btn[aria-selected="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.period-btn:hover, .reading-btn:hover { background: var(--panel); }
 
-.hero-lead {
-  margin: 0;
-  font-size: clamp(1.1rem, 3vw, 1.4rem);
-  color: var(--ink-soft);
-}
-
-.hero-tail {
-  margin: 0.25rem 0 0;
-  font-size: clamp(1.1rem, 3vw, 1.4rem);
-  color: var(--ink-soft);
-}
-
-.hero-caption {
-  margin: 0.85rem 0 0;
-  color: var(--ink-soft);
-  font-size: 0.92rem;
-}
-
-.hero-figure {
-  font-family: var(--mono);
-  font-size: clamp(2.6rem, 10vw, 5rem);
-  line-height: 0.95;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-  margin: 0.1rem 0 0;
+.period-btn[aria-selected="true"],
+.reading-btn[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
 }
 
 .readings {
@@ -147,210 +195,272 @@ main {
 
 .readings span { color: var(--ink-soft); font-size: 0.9rem; }
 
-.reading-btn {
-  appearance: none;
-  font: inherit;
-  font-size: 0.9rem;
-  padding: 0.35rem 0.8rem;
-  background: transparent;
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  cursor: pointer;
+/* ---- número grande: autocolante com fita-cola --------------------- */
+
+.hero-card {
+  position: relative;
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 2.2rem 2rem 2.4rem;
+  box-shadow: 0 10px 26px rgba(35, 33, 28, 0.14);
+  transform: rotate(-0.5deg);
 }
 
-.reading-btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.hero-card::before {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  margin-left: -55px;
+  width: 110px;
+  height: 28px;
+  background: rgba(242, 194, 70, 0.75);
+  border-left: 1px dashed rgba(35, 33, 28, 0.2);
+  border-right: 1px dashed rgba(35, 33, 28, 0.2);
+  transform: rotate(-1.5deg);
+}
 
-section { margin-top: 3.25rem; }
+.hero-lead {
+  margin: 0;
+  font-size: clamp(1.1rem, 3vw, 1.35rem);
+  color: var(--ink-soft);
+}
+
+.hero-figure {
+  margin: 0.15rem 0 0;
+  font-weight: 800;
+  font-size: clamp(2.1rem, 8vw, 4.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  text-wrap: balance;
+}
+
+.hero-tail {
+  margin: 0.4rem 0 0;
+  font-size: clamp(1.1rem, 3vw, 1.35rem);
+  color: var(--ink-soft);
+}
+
+.hero-caption {
+  margin: 1.1rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+/* ---- secções ------------------------------------------------------ */
+
+section { margin-top: 3rem; }
 
 section h2 {
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--rule);
+  margin: 0 0 0.4rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
 .section-caption {
   color: var(--ink-soft);
-  font-size: 0.9rem;
-  margin: 0.6rem 0 1.25rem;
+  font-size: 0.95rem;
+  margin: 0 0 1.4rem;
+  max-width: 64ch;
 }
 
-/* Grafico circular: SVG a esquerda, legenda de texto a direita (ou por
-   baixo, em ecras estreitos). A legenda carrega toda a informacao que
-   antes estava nas barras (nome, duracao, quantas vezes): o grafico
-   sozinho nunca e a unica fonte da informacao. */
+.subhead {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 2.25rem 0 0.4rem;
+}
+
+.section-caption.example {
+  margin: 1rem 0 0;
+  padding-left: 0.9rem;
+  border-left: 3px solid var(--bar-1);
+}
+
+/* ---- gráfico circular --------------------------------------------- */
+
 .pie-wrap {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1.75rem;
+  gap: 2.2rem;
 }
 
-.pie-svg { width: 11rem; flex-shrink: 0; }
+.pie-svg {
+  width: 11.5rem;
+  flex-shrink: 0;
+  padding: 0.9rem;
+  background: var(--panel);
+  border-radius: 999px;
+  box-shadow: var(--sticker);
+  transform: rotate(2deg);
+}
+
 svg.pie { width: 100%; height: auto; display: block; }
-svg.pie path, svg.pie circle { stroke: var(--paper); stroke-width: 2; }
+svg.pie path, svg.pie circle { stroke: var(--panel); stroke-width: 4; }
 
 .pie-legend {
   list-style: none;
   margin: 0;
   padding: 0;
   flex: 1;
-  min-width: 14rem;
+  min-width: 15rem;
 }
 
 .pie-legend li {
   display: flex;
   align-items: baseline;
-  gap: 0.6rem;
-  padding: 0.4rem 0;
+  gap: 0.7rem;
+  padding: 0.6rem 0;
   border-bottom: 1px solid var(--rule);
 }
 
 .pie-legend li:last-child { border-bottom: 0; }
 
 .pie-dot {
-  width: 0.7rem;
-  height: 0.7rem;
+  width: 0.8rem;
+  height: 0.8rem;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .pie-legend-label { font-weight: 600; }
-.pie-legend-value { color: var(--ink-soft); font-size: 0.9rem; margin-left: auto; text-align: right; }
 
-/* Barras horizontais do tempo no ar. Medidas contra o tempo total de
-   emissao do periodo, nao umas contra as outras: e isso que torna
-   visivel que as barras se sobrepoem em vez de repartirem um todo. */
-.bars {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.pie-legend-value {
+  margin-left: auto;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
 }
+
+/* ---- barras do tempo no ar ---------------------------------------- */
+
+.bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.2rem; }
 
 .bars li {
   display: grid;
-  grid-template-columns: minmax(7rem, auto) 1fr;
+  grid-template-columns: minmax(8rem, auto) 1fr;
   align-items: center;
-  column-gap: 0.9rem;
-  padding: 0.55rem 0;
-  border-bottom: 1px solid var(--rule);
+  column-gap: 1rem;
 }
-
-.bars li:last-child { border-bottom: 0; }
 
 .bar-label { font-weight: 600; }
 
 .bar-track {
   background: var(--panel);
-  height: 0.85rem;
-  border-radius: 2px;
+  height: 1.5rem;
+  border-radius: 6px;
   overflow: hidden;
+  box-shadow: 0 3px 8px rgba(35, 33, 28, 0.1);
 }
 
 .bar-fill { display: block; height: 100%; }
 
 .bar-value {
   grid-column: 2;
+  font-family: var(--mono);
+  font-size: 0.84rem;
   color: var(--ink-soft);
-  font-size: 0.9rem;
-  padding-top: 0.15rem;
+  padding-top: 0.35rem;
 }
 
 @media (max-width: 30rem) {
-  .bars li { grid-template-columns: 1fr; row-gap: 0.3rem; }
+  .bars li { grid-template-columns: 1fr; row-gap: 0.35rem; }
   .bar-value { grid-column: 1; }
 }
 
-.subhead {
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin: 2.25rem 0 0;
+/* ---- evolução mês a mês ------------------------------------------- */
+
+.chart-readout {
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+  background: var(--panel);
+  padding: 0.55rem 0.8rem;
+  margin: 0 0 1rem;
+  border-left: 5px solid var(--bar-3);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(35, 33, 28, 0.1);
+  min-height: 1.5rem;
 }
 
-.section-caption.example {
-  margin: 1rem 0 0;
-  padding-left: 0.9rem;
-  border-left: 2px solid var(--rule);
+.chart-holder {
+  touch-action: manipulation;
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 1.2rem 1rem 0.6rem;
+  box-shadow: var(--sticker);
 }
 
-/* Grafico de evolucao. O tooltip nativo do SVG foi substituido pela
-   linha de leitura acima do grafico: aparece de imediato, e o mesmo
-   texto serve o rato e o teclado. */
 .chart { width: 100%; height: auto; display: block; }
-.chart .bar { fill: var(--bar-1); }
+.chart .bar { fill: var(--mute); }
 .chart .axis { fill: var(--ink-soft); font-size: 11px; font-family: var(--mono); }
-.chart .baseline { stroke: var(--rule); stroke-width: 1; }
+.chart .baseline { stroke: var(--ink); stroke-width: 2; }
 
 .chart g.month { cursor: pointer; }
 .chart g.month:focus { outline: none; }
 .chart g.month:hover .bar,
 .chart g.month:focus-visible .bar,
-.chart g.month.is-active .bar { fill: var(--bar-2); }
+.chart g.month.is-active .bar { fill: var(--bar-3); }
 .chart g.month:focus-visible .hit { stroke: var(--ink); stroke-width: 2; }
 
-.chart-readout {
-  font-family: var(--mono);
-  font-size: 0.9rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink);
-  background: var(--panel);
-  padding: 0.5rem 0.75rem;
-  margin: 0 0 0.5rem;
-  border-left: 3px solid var(--bar-2);
-  min-height: 1.5rem;
-}
+/* ---- calendário ---------------------------------------------------
+   Largura fixa em pixeis, com deslocamento horizontal em ecrãs
+   estreitos: encolher os quadrados até caberem tornaria o padrão
+   semanal ilegível, que é a única razão para esta página existir. */
 
-.chart-holder { touch-action: manipulation; }
-
-/* Calendario. Largura fixa em pixeis, com deslocamento horizontal em
-   ecras estreitos: encolher os quadrados ate caberem tornaria o padrao
-   semanal ilegivel, que e a unica razao para esta pagina existir. */
 .cal-holder {
   overflow-x: auto;
-  padding-bottom: 0.5rem;
+  padding: 1rem 1rem 0.75rem;
+  background: var(--panel);
+  border-radius: 8px;
+  box-shadow: var(--sticker);
 }
 
 svg.cal { display: block; }
 .cal-axis { fill: var(--ink-soft); font-size: 9px; font-family: var(--mono); }
-.cal-empty { fill: var(--panel); }
-.cal-cell { stroke-width: 1.5; }
+.cal-empty { fill: var(--mute); }
+.cal-cell { stroke: var(--panel); stroke-width: 1.5; }
 .cal-day { cursor: pointer; }
 .cal-day:focus { outline: none; }
 .cal-day:hover .cal-cell,
 .cal-day:focus-visible .cal-cell,
 .cal-day.is-active .cal-cell { stroke: var(--ink); stroke-width: 1.5; }
 
-.breadcrumb {
-  margin: 0 0 0.75rem;
-  font-size: 0.9rem;
-  color: var(--ink-soft);
-}
+/* ---- estados e rodapé --------------------------------------------- */
 
 .empty {
   padding: 2rem;
   background: var(--panel);
+  border-radius: 8px;
+  box-shadow: var(--sticker);
   max-width: 46ch;
 }
-.empty h2 { border: 0; font-size: 1.05rem; }
+
+.empty h2 { font-size: 1.05rem; }
 .empty code { font-family: var(--mono); font-size: 0.9em; }
 
 .loading { color: var(--ink-soft); }
 
 .colofon {
-  border-top: 1px solid var(--rule);
-  max-width: 62rem;
+  border-top: 2px dashed var(--rule);
+  max-width: 63rem;
   margin: 0 auto;
   padding: 2.5rem 1.5rem 4rem;
   display: grid;
   gap: 2.5rem;
   grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-  font-size: 0.92rem;
+  font-size: 0.93rem;
   color: var(--ink-soft);
 }
 
-.colofon h2 { font-size: 0.85rem; color: var(--ink); margin: 0 0 0.6rem; }
-.colofon p { margin: 0 0 0.5rem; max-width: 42ch; }
+.colofon h2 { font-size: 1rem; font-weight: 800; color: var(--ink); margin: 0 0 0.6rem; }
+.colofon p { margin: 0 0 0.5rem; max-width: 44ch; }
+.colofon p:last-child { margin-bottom: 0; }
+#generated { font-family: var(--mono); font-size: 0.82rem; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }

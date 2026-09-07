@@ -58,6 +58,19 @@ var MTV = (function () {
     return text.charAt(0).toUpperCase() + text.slice(1);
   }
 
+  function escapeHtml(text) {
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  /* Nomes de temas e programas escritos como HTML, com "Infotainment"
+     sempre em itálico. É uma regra de escrita da casa, e vive aqui para
+     não haver duas páginas a aplicá-la de maneiras diferentes. O texto
+     é escapado antes, porque o nome vem do stats.json. */
+  function nameHtml(text) {
+    return escapeHtml(text).replace(/\bInfotainment\b/g, "<em>Infotainment</em>");
+  }
+
   function el(tag, attrs, children) {
     var node = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (key) {
@@ -86,6 +99,8 @@ var MTV = (function () {
     monthNameLabel: monthNameLabel,
     fullDateLabel: fullDateLabel,
     capitalize: capitalize,
+    escapeHtml: escapeHtml,
+    nameHtml: nameHtml,
     el: el,
     loadStats: loadStats
   };

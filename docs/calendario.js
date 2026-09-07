@@ -18,6 +18,7 @@
   "use strict";
 
   var el = MTV.el;
+  var nameHtml = MTV.nameHtml;
   var humanDuration = MTV.humanDuration;
   var fromIso = MTV.fromIso;
   var isoDate = MTV.isoDate;
@@ -171,7 +172,7 @@
         var vezes = t.blocks === 1 ? "1 vez" : t.blocks + " vezes";
         lista.appendChild(el("li", {}, [
           dot,
-          el("span", { class: "pie-legend-label", text: nome }),
+          el("span", { class: "pie-legend-label", html: nameHtml(nome) }),
           el("span", {
             class: "pie-legend-value",
             text: vezes + " · " + humanDuration(t.seconds)
@@ -273,7 +274,7 @@
           type: "button",
           role: "tab",
           "aria-selected": String(topic.id === state.topic),
-          text: topic.name
+          html: nameHtml(topic.name)
         });
         tab.addEventListener("click", function () {
           state.topic = topic.id;
