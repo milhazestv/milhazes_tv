@@ -42,9 +42,16 @@ CDX_API = "https://web.archive.org/cdx/search/cdx"
 REQUEST_DELAY_S = 1.0  # cortesia para com o Internet Archive
 
 
-def cdx_snapshots(url: str, date_from: str, date_to: str) -> list[str]:
+def cdx_snapshots(url: str, date_from: str, date_to: str, attempts: int = 4) -> list[str]:
     """Devolve os timestamps (AAAAMMDDhhmmss) das capturas únicas do feed
-    no Wayback Machine, uma por conteúdo distinto (collapse=digest)."""
+    no Wayback Machine, uma por conteúdo distinto (collapse=digest).
+
+    O CDX API do Internet Archive é conhecido por devolver erros
+    intermitentes (403/502/503) sob carga, sem que isso signifique um
+    bloqueio permanente. `get_text` já tenta 3 vezes por pedido; aqui
+    tentamos o pedido completo mais vezes, com pausas maiores, porque
+    esta chamada só acontece uma vez por corrida e vale a pena insistir.
+    """
     params = {
         "url": url,
         "output": "json",
@@ -55,11 +62,30 @@ def cdx_snapshots(url: str, date_from: str, date_to: str) -> list[str]:
         "fl": "timestamp",
     }
     query = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
-    raw = get_text(f"{CDX_API}?{query}")
-    rows = json.loads(raw)
-    if len(rows) <= 1:
-        return []
-    return [row[0] for row in rows[1:]]  # primeira linha é o cabeçalho
+    full_url = f"{CDX_API}?{query}"
+
+    last_error: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            raw = get_text(full_url)
+            rows = json.loads(raw)
+            if len(rows) <= 1:
+                return []
+            return [row[0] for row in rows[1:]]  # primeira linha é o cabeçalho
+        except Exception as exc:  # noqa: BLE001
+            last_error = exc
+            if attempt < attempts - 1:
+                wait = 5 * (attempt + 1)
+                print(f"  CDX falhou ({exc}), a tentar outra vez em {wait}s...")
+                time.sleep(wait)
+
+    raise RuntimeError(
+        "O Internet Archive não respondeu ao pedido de capturas depois de "
+        f"{attempts} tentativas. Isto costuma ser um bloqueio temporário do "
+        "lado deles a pedidos vindos de redes de centros de dados (inclui "
+        "GitHub Actions) — correr o mesmo comando a partir de uma rede "
+        f"doméstica costuma resolver. Erro original: {last_error}"
+    )
 
 
 def fetch_snapshot(url: str, timestamp: str) -> list[RawItem]:
@@ -110,8 +136,16 @@ def backfill(source_id: str, date_from: str | None, date_to: str | None) -> int:
 
     print(f"a listar capturas de {source.url}")
     print(f"entre {date_from} e {date_to}")
-    timestamps = cdx_snapshots(source.url, date_from, date_to)
+    try:
+        timestamps = cdx_snapshots(source.url, date_from, date_to)
+    except RuntimeError as exc:
+        print(f"\nERRO: {exc}", file=sys.stderr)
+        return 1
     print(f"{len(timestamps)} capturas únicas encontradas")
+
+    if not timestamps:
+        print("Nada para processar — sem capturas nesse intervalo de datas.")
+        return 0
 
     existing = store.load()
     collected = []

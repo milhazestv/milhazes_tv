@@ -189,5 +189,35 @@ class TestCrossSourceDedup(unittest.TestCase):
         self.assertEqual(dup, [])
 
 
+class TestBackfillWaybackErrorHandling(unittest.TestCase):
+    def test_persistent_cdx_failure_returns_clean_error_not_a_crash(self):
+        from collector import backfill_wayback
+
+        with mock.patch("collector.backfill_wayback.time.sleep"), \
+             mock.patch(
+                 "collector.backfill_wayback.get_text",
+                 side_effect=RuntimeError("HTTP Error 403: Forbidden"),
+             ):
+            rc = backfill_wayback.backfill("omny-guerra-fria", "2022-02-24", "2026-09-07")
+        self.assertEqual(rc, 1)
+
+    def test_cdx_recovers_after_transient_failures(self):
+        from collector.backfill_wayback import cdx_snapshots
+
+        calls = {"n": 0}
+
+        def flaky(url):
+            calls["n"] += 1
+            if calls["n"] < 3:
+                raise RuntimeError("HTTP Error 503: temporario")
+            return '[["timestamp"],["20260101000000"]]'
+
+        with mock.patch("collector.backfill_wayback.time.sleep"), \
+             mock.patch("collector.backfill_wayback.get_text", side_effect=flaky):
+            result = cdx_snapshots("https://example.invalid/f.rss", "2022-01-01", "2026-01-01")
+        self.assertEqual(result, ["20260101000000"])
+        self.assertEqual(calls["n"], 3)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
