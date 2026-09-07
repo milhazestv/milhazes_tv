@@ -274,10 +274,58 @@ svg.pie path, svg.pie circle { stroke: var(--paper); stroke-width: 2; }
   border-left: 2px solid var(--rule);
 }
 
+/* Grafico de evolucao. O tooltip nativo do SVG foi substituido pela
+   linha de leitura acima do grafico: aparece de imediato, e o mesmo
+   texto serve o rato e o teclado. */
 .chart { width: 100%; height: auto; display: block; }
-.chart rect { fill: var(--bar-1); }
-.chart .axis { fill: var(--ink-soft); font-size: 10px; font-family: var(--mono); }
+.chart .bar { fill: var(--bar-1); }
+.chart .axis { fill: var(--ink-soft); font-size: 11px; font-family: var(--mono); }
 .chart .baseline { stroke: var(--rule); stroke-width: 1; }
+
+.chart g.month { cursor: pointer; }
+.chart g.month:focus { outline: none; }
+.chart g.month:hover .bar,
+.chart g.month:focus-visible .bar,
+.chart g.month.is-active .bar { fill: var(--bar-2); }
+.chart g.month:focus-visible .hit { stroke: var(--ink); stroke-width: 2; }
+
+.chart-readout {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: var(--panel);
+  padding: 0.5rem 0.75rem;
+  margin: 0 0 0.5rem;
+  border-left: 3px solid var(--bar-2);
+  min-height: 1.5rem;
+}
+
+.chart-holder { touch-action: manipulation; }
+
+/* Calendario. Largura fixa em pixeis, com deslocamento horizontal em
+   ecras estreitos: encolher os quadrados ate caberem tornaria o padrao
+   semanal ilegivel, que e a unica razao para esta pagina existir. */
+.cal-holder {
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+svg.cal { display: block; }
+.cal-axis { fill: var(--ink-soft); font-size: 9px; font-family: var(--mono); }
+.cal-empty { fill: var(--panel); }
+.cal-cell { stroke-width: 1.5; }
+.cal-day { cursor: pointer; }
+.cal-day:focus { outline: none; }
+.cal-day:hover .cal-cell,
+.cal-day:focus-visible .cal-cell,
+.cal-day.is-active .cal-cell { stroke: var(--ink); stroke-width: 1.5; }
+
+.breadcrumb {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
 
 .empty {
   padding: 2rem;

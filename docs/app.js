@@ -10,10 +10,15 @@
   "use strict";
 
   var CORES = ["var(--bar-1)", "var(--bar-2)", "var(--bar-3)", "var(--bar-4)", "var(--bar-5)"];
-  var MESES = [
-    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
-  ];
+
+  // Utilitarios partilhados com o calendario. Ver common.js.
+  var MESES = MTV.MESES;
+  var pad = MTV.pad;
+  var humanDuration = MTV.humanDuration;
+  var isoDate = MTV.isoDate;
+  var monthNameLabel = MTV.monthNameLabel;
+  var capitalize = MTV.capitalize;
+  var el = MTV.el;
 
   // period.id -> { tab: texto curto no botão, frase: texto médio da frase }
   var PERIODOS = [
@@ -25,31 +30,6 @@
 
   var state = { stats: null, topic: null, period: "month" };
 
-  function pad(n) { return n < 10 ? "0" + n : String(n); }
-
-  function timecode(seconds) {
-    var s = Math.max(0, Math.round(seconds));
-    return String(Math.floor(s / 3600)) + ":" + pad(Math.floor((s % 3600) / 60)) + ":" + pad(s % 60);
-  }
-
-  function humanDuration(seconds) {
-    var s = Math.max(0, Math.round(seconds));
-    if (s < 60) { return "menos de um minuto"; }
-    var h = Math.floor(s / 3600);
-    var m = Math.floor((s % 3600) / 60);
-    var horas = h === 1 ? "1 hora" : h + " horas";
-    var minutos = m === 1 ? "1 minuto" : m + " minutos";
-    if (h === 0) { return minutos; }
-    if (m === 0) { return horas; }
-    return horas + " e " + minutos;
-  }
-
-  function days(seconds) { return (seconds / 86400).toFixed(1); }
-
-  function isoDate(date) {
-    return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate());
-  }
-
   function startOfWeek(date) {
     var d = new Date(date);
     var day = d.getDay();
@@ -58,28 +38,9 @@
     return d;
   }
 
-  function formatDatePT(date) {
-    return date.getDate() + " de " + MESES[date.getMonth()];
-  }
-
   function monthLabel(iso) {
     var parts = iso.split("-");
     return parts[1] + "/" + parts[0].slice(2);
-  }
-
-  function capitalize(text) {
-    return text.charAt(0).toUpperCase() + text.slice(1);
-  }
-
-  function el(tag, attrs, children) {
-    var node = document.createElement(tag);
-    Object.keys(attrs || {}).forEach(function (key) {
-      if (key === "text") { node.textContent = attrs[key]; }
-      else if (key === "html") { node.innerHTML = attrs[key]; }
-      else { node.setAttribute(key, attrs[key]); }
-    });
-    (children || []).forEach(function (child) { node.appendChild(child); });
-    return node;
   }
 
   function currentTopic() {
@@ -391,38 +352,85 @@
   }
 
   /* Não é filtrado pelo período escolhido: mostra sempre a evolução
-     completa, porque a pergunta aqui é outra: está a crescer? */
+     completa, porque a pergunta aqui é outra: está a crescer?
+
+     O tooltip nativo do SVG (<title>) foi substituído por uma linha de
+     leitura própria. O nativo demora quase um segundo a aparecer e não
+     se controla. Cada mês tem uma área de toque de altura inteira, para
+     que apanhar um mês fraco não exija acertar numa barra de cinco
+     pixels, e é focável por teclado, para que o gráfico nunca seja a
+     única forma de chegar ao número. */
   function renderEvolucao(panel, topic) {
     if (!topic.by_month.length) { return; }
 
     var months = topic.by_month;
     var max = Math.max.apply(null, months.map(function (m) { return m.airtime_s; }));
-    var width = 1000, height = 220, padBottom = 26;
+    var width = 1000, height = 210, padBottom = 28, padTop = 6;
+    var plot = height - padBottom - padTop;
     var slot = width / months.length;
 
     var svg = '<svg class="chart" viewBox="0 0 ' + width + " " + height +
-      '" role="img" aria-label="Como o tempo de emissão cresceu desde 2022">';
+      '" role="group" aria-label="Tempo de emissão mês a mês">';
+
+    var seenYears = {};
     months.forEach(function (month, i) {
-      var barHeight = max ? (month.airtime_s / max) * (height - padBottom - 6) : 0;
-      svg += '<rect x="' + (i * slot + slot * 0.15).toFixed(1) +
+      var barHeight = max ? (month.airtime_s / max) * plot : 0;
+      var x = i * slot;
+      var vezes = month.blocks === 1 ? "1 vez no ar" : month.blocks + " vezes no ar";
+      var label = capitalize(monthNameLabel(month.month)) + ", " +
+        humanDuration(month.airtime_s) + ", " + vezes;
+
+      svg += '<g class="month" data-i="' + i + '" tabindex="0" role="img" aria-label="' + label + '">';
+      svg += '<rect class="hit" x="' + x.toFixed(1) + '" y="0" width="' + slot.toFixed(1) +
+        '" height="' + (height - padBottom) + '" fill="transparent"></rect>';
+      svg += '<rect class="bar" x="' + (x + slot * 0.15).toFixed(1) +
         '" y="' + (height - padBottom - barHeight).toFixed(1) +
         '" width="' + (slot * 0.7).toFixed(1) +
-        '" height="' + barHeight.toFixed(1) + '"><title>' + month.month + ": " +
-        humanDuration(month.airtime_s) + "</title></rect>";
-      if (months.length < 40 || i % 4 === 0) {
-        svg += '<text class="axis" x="' + (i * slot + slot / 2).toFixed(1) +
-          '" y="' + (height - 8) + '" text-anchor="middle">' +
-          monthLabel(month.month) + "</text>";
+        '" height="' + barHeight.toFixed(1) + '" rx="1.5"></rect>';
+      svg += "</g>";
+
+      var year = month.month.slice(0, 4);
+      if (!seenYears[year]) {
+        seenYears[year] = true;
+        svg += '<text class="axis" x="' + (x + slot / 2).toFixed(1) +
+          '" y="' + (height - 9) + '" text-anchor="middle">' + year + "</text>";
       }
     });
+
     svg += '<line class="baseline" x1="0" y1="' + (height - padBottom) +
       '" x2="' + width + '" y2="' + (height - padBottom) + '"/></svg>';
 
+    var readout = el("p", { class: "chart-readout" });
+    var holder = el("div", { class: "chart-holder", html: svg });
+
+    function show(i) {
+      var month = months[i];
+      var vezes = month.blocks === 1 ? "1 vez no ar" : month.blocks + " vezes no ar";
+      readout.textContent = capitalize(monthNameLabel(month.month)) + " · " +
+        humanDuration(month.airtime_s) + " · " + vezes;
+      Array.prototype.forEach.call(holder.querySelectorAll("g.month"), function (g) {
+        g.classList.toggle("is-active", Number(g.getAttribute("data-i")) === i);
+      });
+    }
+
+    Array.prototype.forEach.call(holder.querySelectorAll("g.month"), function (g) {
+      var i = Number(g.getAttribute("data-i"));
+      ["mouseenter", "focus", "click"].forEach(function (evt) {
+        g.addEventListener(evt, function () { show(i); });
+      });
+    });
+
     panel.appendChild(el("section", {}, [
-      el("h2", { text: "Como tem crescido desde 2022" }),
-      el("p", { class: "section-caption", text: "Cada barra é um mês. Quanto mais alta, mais tempo esteve no ar." }),
-      el("div", { html: svg })
+      el("h2", { text: "Como tem crescido desde " + (topic.first_record || topic.since || "").slice(0, 4) }),
+      el("p", {
+        class: "section-caption",
+        text: "Cada barra é um mês. Passe o rato por cima, ou use o teclado, para ver os valores."
+      }),
+      readout,
+      holder
     ]));
+
+    show(months.length - 1);
   }
 
   function renderPanel() {
@@ -449,11 +457,7 @@
     renderPanel();
   }
 
-  fetch("data/stats.json", { cache: "no-cache" })
-    .then(function (response) {
-      if (!response.ok) { throw new Error("HTTP " + response.status); }
-      return response.json();
-    })
+  MTV.loadStats()
     .then(boot)
     .catch(function () {
       document.getElementById("panel").innerHTML =

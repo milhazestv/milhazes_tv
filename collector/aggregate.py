@@ -35,6 +35,25 @@ def _airtime(bucket: dict) -> dict:
     return {"airtime_s": sum(bucket.values()), "blocks": len(bucket)}
 
 
+def _airtime_dated(bucket: dict, origens: dict) -> dict:
+    """Como `_airtime`, mais a contagem de blocos cuja data foi declarada
+    pelo emissor.
+
+    Existe porque o calendario mostra cada bloco num dia concreto, e um
+    bloco datado pela publicacao esta no dia em que o episodio saiu no
+    feed, nao no dia em que foi para o ar. Sem este campo, o calendario
+    afirmaria uma data de emissao que o dataset nao tem. Nao corrige a
+    data, apenas diz quais e que sao declaradas.
+    """
+    return {
+        "airtime_s": sum(bucket.values()),
+        "blocks": len(bucket),
+        "blocks_from_synopsis": sum(
+            1 for key in bucket if origens.get(key) == "sinopse"
+        ),
+    }
+
+
 def _empty_subject() -> dict:
     return {"shared_equal": 0.0, "each_full": 0.0, "blocks": set()}
 
@@ -86,6 +105,9 @@ def build(rows: list[dict], config: Config) -> dict:
         # período (semana, mês, ano, desde sempre) sem nova agregação.
         subject_by_day: dict = defaultdict(lambda: defaultdict(_empty_subject))
         program_by_day: dict = defaultdict(lambda: defaultdict(_blocks))
+        # origem da data de cada bloco, para o calendario poder separar
+        # data de emissao declarada de data de publicacao
+        date_origin: dict = {}
 
         for row in topic_rows:
             key = _key(row)
@@ -98,6 +120,7 @@ def build(rows: list[dict], config: Config) -> dict:
             per_month[date[:7]][key] = duration
             per_program[program][key] = duration
             program_by_day[date][program][key] = duration
+            date_origin[key] = row.get("date_source")
 
             bucket = per_subject[row["subject"]]
             bucket["shared_equal"] += _shared(row)
@@ -158,7 +181,7 @@ def build(rows: list[dict], config: Config) -> dict:
                     {
                         "date": day,
                         "programs": {
-                            program: _airtime(bucket)
+                            program: _airtime_dated(bucket, date_origin)
                             for program, bucket in program_by_day[day].items()
                         },
                     }

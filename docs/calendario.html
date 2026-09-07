@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendário de emissões · Milhazes TV</title>
+<meta name="description" content="Em que dias estas rubricas foram para o ar, ano a ano.">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="masthead">
+  <p class="breadcrumb"><a href="index.html">Milhazes TV</a></p>
+  <h1>Calendário de emissões</h1>
+  <p class="standfirst">Em que dias cada rubrica foi para o ar. Cada quadrado é um dia, cada linha é um dia da semana.</p>
+</header>
+
+<nav class="topics" id="topics" aria-label="Temas"></nav>
+
+<main id="panel" aria-live="polite">
+  <p class="loading">A carregar os dados.</p>
+</main>
+
+<footer class="colofon">
+  <div class="colofon-block">
+    <h2>Como ler</h2>
+    <p>Um quadrado cheio é um dia em que o canal declarou a data de emissão no texto do episódio. Um quadrado vazado é um dia em que não declarou, e nesse caso fica a data em que o episódio saiu no feed, tipicamente um dia depois.</p>
+    <p>Quando duas rubricas foram para o ar no mesmo dia, o quadrado é dividido entre elas.</p>
+  </div>
+  <div class="colofon-block">
+    <h2>Verificar</h2>
+    <p><a href="data/appearances.json" download>Descarregar todos os dados</a></p>
+    <p><a href="methodology.html">Metodologia e limitações</a></p>
+  </div>
+</footer>
+
+<script src="common.js"></script>
+<script src="calendario.js"></script>
+</body>
+</html>
