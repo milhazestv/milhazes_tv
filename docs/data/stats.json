@@ -1,0 +1,936 @@
+{
+ "default_attribution": "shared_equal",
+ "generated_at": "2026-09-07T10:42:06+00:00",
+ "schema": 1,
+ "topics": [
+  {
+   "by_day": [
+    {
+     "airtime_s": 1244,
+     "blocks": 1,
+     "date": "2024-10-23"
+    },
+    {
+     "airtime_s": 1217,
+     "blocks": 1,
+     "date": "2024-10-26"
+    },
+    {
+     "airtime_s": 1182,
+     "blocks": 1,
+     "date": "2024-10-30"
+    },
+    {
+     "airtime_s": 1229,
+     "blocks": 1,
+     "date": "2024-11-08"
+    },
+    {
+     "airtime_s": 1169,
+     "blocks": 1,
+     "date": "2024-11-13"
+    },
+    {
+     "airtime_s": 1275,
+     "blocks": 1,
+     "date": "2024-11-16"
+    },
+    {
+     "airtime_s": 1637,
+     "blocks": 1,
+     "date": "2024-11-20"
+    },
+    {
+     "airtime_s": 1600,
+     "blocks": 1,
+     "date": "2024-11-23"
+    },
+    {
+     "airtime_s": 1124,
+     "blocks": 1,
+     "date": "2024-11-27"
+    },
+    {
+     "airtime_s": 1178,
+     "blocks": 1,
+     "date": "2024-11-30"
+    },
+    {
+     "airtime_s": 1392,
+     "blocks": 1,
+     "date": "2024-12-04"
+    },
+    {
+     "airtime_s": 1340,
+     "blocks": 1,
+     "date": "2024-12-07"
+    },
+    {
+     "airtime_s": 1281,
+     "blocks": 1,
+     "date": "2024-12-11"
+    },
+    {
+     "airtime_s": 1264,
+     "blocks": 1,
+     "date": "2024-12-14"
+    },
+    {
+     "airtime_s": 1266,
+     "blocks": 1,
+     "date": "2024-12-18"
+    },
+    {
+     "airtime_s": 1166,
+     "blocks": 1,
+     "date": "2025-01-11"
+    },
+    {
+     "airtime_s": 1442,
+     "blocks": 1,
+     "date": "2025-01-15"
+    },
+    {
+     "airtime_s": 1359,
+     "blocks": 1,
+     "date": "2025-01-18"
+    },
+    {
+     "airtime_s": 1322,
+     "blocks": 1,
+     "date": "2025-01-22"
+    },
+    {
+     "airtime_s": 960,
+     "blocks": 1,
+     "date": "2025-01-25"
+    },
+    {
+     "airtime_s": 1252,
+     "blocks": 1,
+     "date": "2025-01-29"
+    },
+    {
+     "airtime_s": 1253,
+     "blocks": 1,
+     "date": "2025-02-01"
+    },
+    {
+     "airtime_s": 1260,
+     "blocks": 1,
+     "date": "2025-02-05"
+    },
+    {
+     "airtime_s": 2227,
+     "blocks": 1,
+     "date": "2025-02-08"
+    },
+    {
+     "airtime_s": 1558,
+     "blocks": 1,
+     "date": "2025-02-09"
+    },
+    {
+     "airtime_s": 1313,
+     "blocks": 1,
+     "date": "2025-02-12"
+    },
+    {
+     "airtime_s": 2286,
+     "blocks": 1,
+     "date": "2025-02-15"
+    },
+    {
+     "airtime_s": 1301,
+     "blocks": 1,
+     "date": "2025-02-16"
+    },
+    {
+     "airtime_s": 1214,
+     "blocks": 1,
+     "date": "2025-02-19"
+    },
+    {
+     "airtime_s": 1379,
+     "blocks": 1,
+     "date": "2025-02-20"
+    },
+    {
+     "airtime_s": 1246,
+     "blocks": 1,
+     "date": "2025-02-23"
+    },
+    {
+     "airtime_s": 1356,
+     "blocks": 1,
+     "date": "2025-03-02"
+    },
+    {
+     "airtime_s": 1559,
+     "blocks": 1,
+     "date": "2025-03-09"
+    },
+    {
+     "airtime_s": 1377,
+     "blocks": 1,
+     "date": "2025-03-16"
+    },
+    {
+     "airtime_s": 1367,
+     "blocks": 1,
+     "date": "2025-03-23"
+    },
+    {
+     "airtime_s": 1256,
+     "blocks": 1,
+     "date": "2025-03-30"
+    },
+    {
+     "airtime_s": 1567,
+     "blocks": 1,
+     "date": "2025-04-06"
+    },
+    {
+     "airtime_s": 1246,
+     "blocks": 1,
+     "date": "2025-04-13"
+    },
+    {
+     "airtime_s": 1339,
+     "blocks": 1,
+     "date": "2025-04-20"
+    },
+    {
+     "airtime_s": 1266,
+     "blocks": 1,
+     "date": "2025-04-27"
+    },
+    {
+     "airtime_s": 1388,
+     "blocks": 1,
+     "date": "2025-05-04"
+    },
+    {
+     "airtime_s": 1494,
+     "blocks": 1,
+     "date": "2025-05-11"
+    },
+    {
+     "airtime_s": 1303,
+     "blocks": 1,
+     "date": "2025-05-25"
+    },
+    {
+     "airtime_s": 1274,
+     "blocks": 1,
+     "date": "2025-06-01"
+    },
+    {
+     "airtime_s": 1243,
+     "blocks": 1,
+     "date": "2025-06-08"
+    },
+    {
+     "airtime_s": 841,
+     "blocks": 1,
+     "date": "2025-06-13"
+    },
+    {
+     "airtime_s": 1555,
+     "blocks": 1,
+     "date": "2025-06-15"
+    },
+    {
+     "airtime_s": 1641,
+     "blocks": 1,
+     "date": "2025-06-22"
+    },
+    {
+     "airtime_s": 1106,
+     "blocks": 1,
+     "date": "2025-06-29"
+    },
+    {
+     "airtime_s": 1642,
+     "blocks": 1,
+     "date": "2025-07-06"
+    },
+    {
+     "airtime_s": 1339,
+     "blocks": 1,
+     "date": "2025-07-09"
+    },
+    {
+     "airtime_s": 4951,
+     "blocks": 2,
+     "date": "2025-07-13"
+    },
+    {
+     "airtime_s": 1263,
+     "blocks": 1,
+     "date": "2025-07-16"
+    },
+    {
+     "airtime_s": 4437,
+     "blocks": 2,
+     "date": "2025-07-20"
+    },
+    {
+     "airtime_s": 1251,
+     "blocks": 1,
+     "date": "2025-07-23"
+    },
+    {
+     "airtime_s": 4821,
+     "blocks": 2,
+     "date": "2025-07-27"
+    },
+    {
+     "airtime_s": 4776,
+     "blocks": 2,
+     "date": "2025-09-07"
+    },
+    {
+     "airtime_s": 1328,
+     "blocks": 1,
+     "date": "2025-09-11"
+    },
+    {
+     "airtime_s": 5116,
+     "blocks": 2,
+     "date": "2025-09-14"
+    },
+    {
+     "airtime_s": 1461,
+     "blocks": 1,
+     "date": "2025-09-17"
+    },
+    {
+     "airtime_s": 4694,
+     "blocks": 2,
+     "date": "2025-09-21"
+    },
+    {
+     "airtime_s": 1222,
+     "blocks": 1,
+     "date": "2025-09-24"
+    },
+    {
+     "airtime_s": 5002,
+     "blocks": 2,
+     "date": "2025-09-28"
+    },
+    {
+     "airtime_s": 1316,
+     "blocks": 1,
+     "date": "2025-10-01"
+    },
+    {
+     "airtime_s": 5089,
+     "blocks": 2,
+     "date": "2025-10-05"
+    },
+    {
+     "airtime_s": 1245,
+     "blocks": 1,
+     "date": "2025-10-08"
+    },
+    {
+     "airtime_s": 3808,
+     "blocks": 1,
+     "date": "2025-10-12"
+    },
+    {
+     "airtime_s": 1015,
+     "blocks": 1,
+     "date": "2025-10-15"
+    },
+    {
+     "airtime_s": 6396,
+     "blocks": 2,
+     "date": "2025-10-19"
+    },
+    {
+     "airtime_s": 1347,
+     "blocks": 1,
+     "date": "2025-10-22"
+    },
+    {
+     "airtime_s": 6835,
+     "blocks": 2,
+     "date": "2025-10-26"
+    },
+    {
+     "airtime_s": 1460,
+     "blocks": 1,
+     "date": "2025-10-29"
+    },
+    {
+     "airtime_s": 7091,
+     "blocks": 2,
+     "date": "2025-11-02"
+    },
+    {
+     "airtime_s": 1272,
+     "blocks": 1,
+     "date": "2025-11-05"
+    },
+    {
+     "airtime_s": 7175,
+     "blocks": 2,
+     "date": "2025-11-09"
+    },
+    {
+     "airtime_s": 1251,
+     "blocks": 1,
+     "date": "2025-11-12"
+    },
+    {
+     "airtime_s": 6896,
+     "blocks": 2,
+     "date": "2025-11-16"
+    },
+    {
+     "airtime_s": 1260,
+     "blocks": 1,
+     "date": "2025-11-19"
+    },
+    {
+     "airtime_s": 6348,
+     "blocks": 2,
+     "date": "2025-11-23"
+    },
+    {
+     "airtime_s": 964,
+     "blocks": 1,
+     "date": "2025-11-26"
+    },
+    {
+     "airtime_s": 6713,
+     "blocks": 2,
+     "date": "2025-11-30"
+    },
+    {
+     "airtime_s": 1229,
+     "blocks": 1,
+     "date": "2025-12-03"
+    },
+    {
+     "airtime_s": 7339,
+     "blocks": 2,
+     "date": "2025-12-07"
+    },
+    {
+     "airtime_s": 1196,
+     "blocks": 1,
+     "date": "2025-12-10"
+    },
+    {
+     "airtime_s": 6921,
+     "blocks": 2,
+     "date": "2025-12-21"
+    },
+    {
+     "airtime_s": 5946,
+     "blocks": 1,
+     "date": "2025-12-28"
+    },
+    {
+     "airtime_s": 6832,
+     "blocks": 2,
+     "date": "2026-01-04"
+    },
+    {
+     "airtime_s": 1478,
+     "blocks": 1,
+     "date": "2026-01-07"
+    },
+    {
+     "airtime_s": 1960,
+     "blocks": 1,
+     "date": "2026-01-09"
+    },
+    {
+     "airtime_s": 8032,
+     "blocks": 2,
+     "date": "2026-01-11"
+    },
+    {
+     "airtime_s": 1252,
+     "blocks": 1,
+     "date": "2026-01-14"
+    },
+    {
+     "airtime_s": 5487,
+     "blocks": 1,
+     "date": "2026-01-18"
+    },
+    {
+     "airtime_s": 6995,
+     "blocks": 2,
+     "date": "2026-01-25"
+    },
+    {
+     "airtime_s": 1236,
+     "blocks": 1,
+     "date": "2026-01-29"
+    },
+    {
+     "airtime_s": 6489,
+     "blocks": 2,
+     "date": "2026-02-01"
+    },
+    {
+     "airtime_s": 1243,
+     "blocks": 1,
+     "date": "2026-02-04"
+    },
+    {
+     "airtime_s": 5858,
+     "blocks": 1,
+     "date": "2026-02-08"
+    },
+    {
+     "airtime_s": 1127,
+     "blocks": 1,
+     "date": "2026-02-11"
+    },
+    {
+     "airtime_s": 7176,
+     "blocks": 2,
+     "date": "2026-02-15"
+    },
+    {
+     "airtime_s": 1263,
+     "blocks": 1,
+     "date": "2026-02-18"
+    },
+    {
+     "airtime_s": 7387,
+     "blocks": 2,
+     "date": "2026-02-22"
+    },
+    {
+     "airtime_s": 2987,
+     "blocks": 2,
+     "date": "2026-02-25"
+    },
+    {
+     "airtime_s": 7619,
+     "blocks": 2,
+     "date": "2026-03-01"
+    },
+    {
+     "airtime_s": 1651,
+     "blocks": 1,
+     "date": "2026-03-04"
+    },
+    {
+     "airtime_s": 7669,
+     "blocks": 2,
+     "date": "2026-03-08"
+    },
+    {
+     "airtime_s": 1258,
+     "blocks": 1,
+     "date": "2026-03-11"
+    },
+    {
+     "airtime_s": 7577,
+     "blocks": 2,
+     "date": "2026-03-15"
+    },
+    {
+     "airtime_s": 1239,
+     "blocks": 1,
+     "date": "2026-03-18"
+    },
+    {
+     "airtime_s": 6643,
+     "blocks": 2,
+     "date": "2026-03-22"
+    },
+    {
+     "airtime_s": 1315,
+     "blocks": 1,
+     "date": "2026-03-25"
+    },
+    {
+     "airtime_s": 7496,
+     "blocks": 2,
+     "date": "2026-03-29"
+    },
+    {
+     "airtime_s": 1295,
+     "blocks": 1,
+     "date": "2026-04-01"
+    },
+    {
+     "airtime_s": 6881,
+     "blocks": 2,
+     "date": "2026-04-12"
+    },
+    {
+     "airtime_s": 1263,
+     "blocks": 1,
+     "date": "2026-04-15"
+    },
+    {
+     "airtime_s": 7038,
+     "blocks": 2,
+     "date": "2026-04-19"
+    },
+    {
+     "airtime_s": 1210,
+     "blocks": 1,
+     "date": "2026-04-22"
+    },
+    {
+     "airtime_s": 6705,
+     "blocks": 2,
+     "date": "2026-04-26"
+    },
+    {
+     "airtime_s": 1390,
+     "blocks": 1,
+     "date": "2026-04-29"
+    },
+    {
+     "airtime_s": 7006,
+     "blocks": 2,
+     "date": "2026-05-03"
+    },
+    {
+     "airtime_s": 1260,
+     "blocks": 1,
+     "date": "2026-05-06"
+    },
+    {
+     "airtime_s": 7374,
+     "blocks": 2,
+     "date": "2026-05-10"
+    },
+    {
+     "airtime_s": 945,
+     "blocks": 1,
+     "date": "2026-05-13"
+    },
+    {
+     "airtime_s": 6788,
+     "blocks": 2,
+     "date": "2026-05-17"
+    },
+    {
+     "airtime_s": 1282,
+     "blocks": 1,
+     "date": "2026-05-20"
+    },
+    {
+     "airtime_s": 7511,
+     "blocks": 2,
+     "date": "2026-05-24"
+    },
+    {
+     "airtime_s": 1267,
+     "blocks": 1,
+     "date": "2026-05-27"
+    },
+    {
+     "airtime_s": 6987,
+     "blocks": 2,
+     "date": "2026-05-31"
+    },
+    {
+     "airtime_s": 2498,
+     "blocks": 1,
+     "date": "2026-06-01"
+    },
+    {
+     "airtime_s": 7215,
+     "blocks": 2,
+     "date": "2026-06-07"
+    },
+    {
+     "airtime_s": 1290,
+     "blocks": 1,
+     "date": "2026-06-12"
+    },
+    {
+     "airtime_s": 7360,
+     "blocks": 2,
+     "date": "2026-06-14"
+    },
+    {
+     "airtime_s": 1274,
+     "blocks": 1,
+     "date": "2026-06-17"
+    },
+    {
+     "airtime_s": 7380,
+     "blocks": 2,
+     "date": "2026-06-21"
+    },
+    {
+     "airtime_s": 1180,
+     "blocks": 1,
+     "date": "2026-06-24"
+    },
+    {
+     "airtime_s": 7157,
+     "blocks": 2,
+     "date": "2026-06-28"
+    },
+    {
+     "airtime_s": 6565,
+     "blocks": 2,
+     "date": "2026-07-05"
+    },
+    {
+     "airtime_s": 1144,
+     "blocks": 1,
+     "date": "2026-07-06"
+    },
+    {
+     "airtime_s": 1118,
+     "blocks": 1,
+     "date": "2026-07-08"
+    },
+    {
+     "airtime_s": 6953,
+     "blocks": 2,
+     "date": "2026-07-12"
+    },
+    {
+     "airtime_s": 1182,
+     "blocks": 1,
+     "date": "2026-07-16"
+    },
+    {
+     "airtime_s": 7611,
+     "blocks": 2,
+     "date": "2026-07-19"
+    },
+    {
+     "airtime_s": 1479,
+     "blocks": 1,
+     "date": "2026-07-22"
+    },
+    {
+     "airtime_s": 7728,
+     "blocks": 2,
+     "date": "2026-07-26"
+    },
+    {
+     "airtime_s": 1261,
+     "blocks": 1,
+     "date": "2026-07-29"
+    },
+    {
+     "airtime_s": 7058,
+     "blocks": 2,
+     "date": "2026-08-16"
+    },
+    {
+     "airtime_s": 1301,
+     "blocks": 1,
+     "date": "2026-08-19"
+    },
+    {
+     "airtime_s": 5680,
+     "blocks": 1,
+     "date": "2026-08-23"
+    },
+    {
+     "airtime_s": 1495,
+     "blocks": 1,
+     "date": "2026-08-24"
+    },
+    {
+     "airtime_s": 1256,
+     "blocks": 1,
+     "date": "2026-08-26"
+    },
+    {
+     "airtime_s": 7537,
+     "blocks": 2,
+     "date": "2026-08-30"
+    },
+    {
+     "airtime_s": 1295,
+     "blocks": 1,
+     "date": "2026-09-02"
+    },
+    {
+     "airtime_s": 7151,
+     "blocks": 2,
+     "date": "2026-09-06"
+    }
+   ],
+   "by_month": [
+    {
+     "airtime_s": 3643,
+     "blocks": 3,
+     "month": "2024-10"
+    },
+    {
+     "airtime_s": 9212,
+     "blocks": 7,
+     "month": "2024-11"
+    },
+    {
+     "airtime_s": 6543,
+     "blocks": 5,
+     "month": "2024-12"
+    },
+    {
+     "airtime_s": 7501,
+     "blocks": 6,
+     "month": "2025-01"
+    },
+    {
+     "airtime_s": 15037,
+     "blocks": 10,
+     "month": "2025-02"
+    },
+    {
+     "airtime_s": 6915,
+     "blocks": 5,
+     "month": "2025-03"
+    },
+    {
+     "airtime_s": 5418,
+     "blocks": 4,
+     "month": "2025-04"
+    },
+    {
+     "airtime_s": 4185,
+     "blocks": 3,
+     "month": "2025-05"
+    },
+    {
+     "airtime_s": 7660,
+     "blocks": 6,
+     "month": "2025-06"
+    },
+    {
+     "airtime_s": 19704,
+     "blocks": 10,
+     "month": "2025-07"
+    },
+    {
+     "airtime_s": 23599,
+     "blocks": 11,
+     "month": "2025-09"
+    },
+    {
+     "airtime_s": 28511,
+     "blocks": 12,
+     "month": "2025-10"
+    },
+    {
+     "airtime_s": 38970,
+     "blocks": 14,
+     "month": "2025-11"
+    },
+    {
+     "airtime_s": 22631,
+     "blocks": 7,
+     "month": "2025-12"
+    },
+    {
+     "airtime_s": 33272,
+     "blocks": 11,
+     "month": "2026-01"
+    },
+    {
+     "airtime_s": 33530,
+     "blocks": 12,
+     "month": "2026-02"
+    },
+    {
+     "airtime_s": 42467,
+     "blocks": 14,
+     "month": "2026-03"
+    },
+    {
+     "airtime_s": 25782,
+     "blocks": 10,
+     "month": "2026-04"
+    },
+    {
+     "airtime_s": 40420,
+     "blocks": 14,
+     "month": "2026-05"
+    },
+    {
+     "airtime_s": 35354,
+     "blocks": 12,
+     "month": "2026-06"
+    },
+    {
+     "airtime_s": 35041,
+     "blocks": 13,
+     "month": "2026-07"
+    },
+    {
+     "airtime_s": 24327,
+     "blocks": 8,
+     "month": "2026-08"
+    },
+    {
+     "airtime_s": 8446,
+     "blocks": 3,
+     "month": "2026-09"
+    }
+   ],
+   "by_program": [
+    {
+     "airtime_s": 337331,
+     "blocks": 100,
+     "program": "Leste/Oeste"
+    },
+    {
+     "airtime_s": 140837,
+     "blocks": 100,
+     "program": "Jornal da Noite"
+    }
+   ],
+   "first_record": "2024-10-23",
+   "id": "guerra",
+   "last_record": "2026-09-06",
+   "name": "Infotainment de Guerra",
+   "question": "Quanto tempo de emissao ocupa o comentario permanente sobre guerra?",
+   "since": "2022-02-24",
+   "sources": [
+    "omny-guerra-fria",
+    "omny-leste-oeste"
+   ],
+   "subjects": [
+    {
+     "id": "milhazes",
+     "name": "Jose Milhazes",
+     "role": "comentador",
+     "totals": {
+      "blocks": 100,
+      "each_full": 140837,
+      "shared_equal": 70418
+     }
+    },
+    {
+     "id": "rogeiro",
+     "name": "Nuno Rogeiro",
+     "role": "comentador",
+     "totals": {
+      "blocks": 200,
+      "each_full": 478168,
+      "shared_equal": 407750
+     }
+    }
+   ],
+   "totals": {
+    "airtime_s": 478168,
+    "blocks": 200
+   }
+  }
+ ]
+}
