@@ -25,19 +25,15 @@ pip install -r requirements.txt
 python -m unittest discover -s tests    # todos offline
 python -m collector.main --dry-run      # recolhe sem escrever
 python -m collector.main                # recolhe e escreve docs/data
+python -m tools.build_methodology       # regenera docs/methodology.html
 python -m http.server -d docs 8000      # ver o site em localhost:8000
 ```
 
-## Backfill histórico
+`docs/methodology.html` é gerado a partir de `METHODOLOGY.md`. A suite verifica que os dois estão em dia, por isso alterar o Markdown sem regenerar o HTML parte os testes.
 
-O feed RSS ao vivo só devolve os últimos 100 episódios — um limite do publicador, não ajustável por quem consome o feed. Para cobrir desde o início do tema, há um comando à parte que reconstrói o histórico a partir de capturas arquivadas do feed no Wayback Machine:
+## Cobertura histórica
 
-```bash
-python -m collector.backfill_wayback omny-guerra-fria
-python -m collector.backfill_wayback omny-rogeiro-show --from 2022-02-24
-```
-
-Corre uma vez por fonte, não faz parte da recolha diária, e usa as mesmas regras de atribuição da recolha normal. Também está disponível como workflow manual no GitHub Actions ("backfill-historico"), para não depender da rede local.
+Não há passo de backfill. Os feeds usados expõem paginação Atom (`rel="next"`) e devolvem o histórico quase completo desde 2022 numa recolha normal, o que foi verificado numa corrida real. Ao acrescentar uma fonte nova, confirmar isso com `--dry-run` antes de assumir qualquer limite de página.
 
 ## Acrescentar um tema
 
@@ -71,9 +67,9 @@ sources:
     require_broadcast_evidence: true
 ```
 
-O `roster` fixo usa-se quando todos os episódios da fonte contam sempre para os mesmos intervenientes. `roster: auto` usa-se quando os intervenientes têm de ser detetados a partir do título e da descrição.
+O `roster` fixo usa-se quando todos os episódios da fonte contam sempre para os mesmos intervenientes. `roster: auto` usa-se quando os intervenientes têm de ser detetados a partir do título e da descrição. Uma regra de `segments` também pode declarar o seu próprio `roster`, e tem precedência: é assim que um episódio de outra rubrica, publicado no mesmo feed, não é creditado a quem não esteve nele.
 
-Se um feed misturar mais do que uma rubrica (o mesmo publicador, vários programas no mesmo podcast), usar `segments` para classificar cada item por título e duração — ver o exemplo em `omny-rogeiro-show` no `trackers.yml`. Nunca configurar duas fontes a apontar para o mesmo feed ou para playlists derivadas umas das outras: a deduplicação entre fontes protege contra isso, mas o objetivo é nem chegar lá.
+Se um feed misturar mais do que uma rubrica (o mesmo publicador, vários programas no mesmo podcast), usar `segments` para classificar cada item por título e duração. Ver os exemplos em `omny-guerra-fria` e `omny-rogeiro-show` no `trackers.yml`. Nunca configurar duas fontes a apontar para o mesmo feed ou para playlists derivadas umas das outras: a deduplicação entre fontes protege contra isso, mas o objetivo é nem chegar lá.
 
 ## Acrescentar um tipo de fonte
 

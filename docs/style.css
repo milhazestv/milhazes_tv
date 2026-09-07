@@ -178,7 +178,7 @@ section h2 {
 
 /* Grafico circular: SVG a esquerda, legenda de texto a direita (ou por
    baixo, em ecras estreitos). A legenda carrega toda a informacao que
-   antes estava nas barras — nome, duracao, quantas vezes — o grafico
+   antes estava nas barras (nome, duracao, quantas vezes): o grafico
    sozinho nunca e a unica fonte da informacao. */
 .pie-wrap {
   display: flex;

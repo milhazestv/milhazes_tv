@@ -3,7 +3,7 @@
 Porque esta e a fonte principal e nao o scraping do site: o feed traz
 a duracao declarada pelo publicador em `itunes:duration` e a data em
 `pubDate`. Nao ha heuristica, nao ha parsing de HTML que parta a cada
-redesenho, e o historico completo vem no mesmo pedido.
+redesenho, e o historico vem no mesmo pedido, pagina a pagina.
 
 Limitacao assumida e publicada na metodologia: a duracao do podcast
 pode nao ser exactamente igual a duracao emitida em antena.
@@ -63,10 +63,12 @@ def strip_html(value: str) -> str:
 
 
 def _next_page(root: ET.Element) -> str | None:
-    """Alguns feeds paginam com <atom:link rel="next">. A maioria dos
-    publicados no Omny não expõe isto (o limite de 100 é fixo do lado do
-    publicador), mas seguimos o link quando existe — não custa nada e
-    protege-nos se um dia mudar."""
+    """Alguns feeds paginam com <atom:link rel="next">.
+
+    Verificado nos feeds usados por este projeto: expoem paginacao Atom e
+    devolvem o historico quase completo desde 2022. Nao assumir limites de
+    pagina a partir de documentacao generica do alojamento; verificar no
+    feed concreto com --dry-run."""
     channel = root.find("channel")
     if channel is None:
         return None

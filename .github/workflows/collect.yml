@@ -3,13 +3,19 @@ name: recolha
 on:
   schedule:
     # 05:40 UTC. Hora deliberadamente sem relacao com o fuso de quem mantem
-    # o repositorio, e todos os commits ficam com timestamp UTC.
+    # o repositorio. Os commits desta corrida ficam com timestamp UTC
+    # (ver TZ, abaixo). Commits feitos a mao nao passam por aqui: esses
+    # tem de ser feitos com TZ=UTC do lado de quem os faz.
     - cron: '40 5 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
 
+# Grupo partilhado por todos os workflows que escrevem em docs/data, para
+# que duas corridas nunca escrevam ao mesmo tempo. Nao protege contra um
+# push manual feito de fora do GitHub Actions: para esse caso serve a
+# retentativa no passo de publicacao.
 concurrency:
   group: recolha
   cancel-in-progress: false
@@ -29,6 +35,9 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements.txt
 
+      # A suite corre antes da recolha de proposito: uma regressao no
+      # coletor nao deve chegar a escrever dados. Inclui a verificacao de
+      # que docs/methodology.html corresponde ao METHODOLOGY.md.
       - name: Testes
         run: python -m unittest discover -s tests
 

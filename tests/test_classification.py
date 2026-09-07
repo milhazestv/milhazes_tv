@@ -1,5 +1,6 @@
-"""Testes da classificação por segmento, da exigência de prova de emissão,
-do corte de data e da deduplicação entre fontes. Correm offline."""
+"""Testes da classificação por segmento, do elenco por segmento, da data de
+emissão, da exigência de prova de emissão, do corte de data e da
+deduplicação entre fontes. Correm offline."""
 
 from __future__ import annotations
 
@@ -18,6 +19,33 @@ from collector.sources.base import RawItem  # noqa: E402
 from collector.sources.podcast_rss import PodcastRssSource  # noqa: E402
 
 FIXTURE = (ROOT / "tests" / "fixtures" / "rogeiro_show_sample.xml").read_text(encoding="utf-8")
+GUERRA_FRIA_FIXTURE = (
+    ROOT / "tests" / "fixtures" / "guerra_fria_sample.xml"
+).read_text(encoding="utf-8")
+
+# O feed do Guerra Fria publica também episódios do Jogos de Poder e do
+# Nuno Rogeiro Convida, que são só do Rogeiro. O elenco vive na regra de
+# segmento, não na fonte. Ver config/trackers.yml.
+GUERRA_FRIA_SEGMENTS = (
+    SegmentRule(
+        match_any=("Jogos de Poder",),
+        program="Jogos de Poder",
+        channel="SIC",
+        roster=("rogeiro",),
+    ),
+    SegmentRule(
+        match_any=("Nuno Rogeiro Convida", "Rogeiro convida"),
+        program="Nuno Rogeiro Convida",
+        channel="SIC",
+        roster=("rogeiro",),
+    ),
+    SegmentRule(
+        match_any=(),
+        program="Guerra Fria",
+        channel="SIC",
+        roster=("milhazes", "rogeiro"),
+    ),
+)
 
 ROGEIRO_SEGMENTS = (
     SegmentRule(match_any=("Jogos de Poder",), program="Jogos de Poder", channel="SIC"),
@@ -32,11 +60,45 @@ def make_config(since: str = "2022-02-24") -> Config:
     return Config(
         topics={"guerra": Topic(id="guerra", name="Guerra", since=since)},
         subjects={
+            "milhazes": Subject(id="milhazes", topic="guerra", display_name="José Milhazes",
+                                match_any=("milhazes",)),
             "rogeiro": Subject(id="rogeiro", topic="guerra", display_name="Nuno Rogeiro",
                                 match_any=("rogeiro",)),
         },
         sources=[],
     )
+
+
+def make_guerra_fria_source(**kwargs) -> Source:
+    defaults = dict(
+        id="omny-guerra-fria",
+        type="podcast_rss",
+        topic="guerra",
+        url="https://example.invalid/gf.rss",
+        channel="SIC",
+        program="Guerra Fria",
+        segment="Guerra Fria",
+        roster=["milhazes", "rogeiro"],
+        attribution="shared_equal",
+        confidence="high",
+        require_broadcast_evidence=True,
+        segments=GUERRA_FRIA_SEGMENTS,
+    )
+    defaults.update(kwargs)
+    return Source(**defaults)
+
+
+def build_guerra_fria(source=None, config=None):
+    source = source or make_guerra_fria_source()
+    config = config or make_config()
+    with mock.patch(
+        "collector.sources.podcast_rss.get_text", return_value=GUERRA_FRIA_FIXTURE
+    ):
+        items = list(PodcastRssSource(source).fetch())
+    rows = []
+    for item in items:
+        rows.extend(attribute.build(item, source, config))
+    return rows
 
 
 def make_rogeiro_source(**kwargs) -> Source:
@@ -84,7 +146,7 @@ class TestSegmentClassification(unittest.TestCase):
 
     def test_only_one_playlist_source_needed_no_double_counting(self):
         # As sub-playlists (jogos-de-poder, nuno-rogeiro-convida) NÃO são
-        # configuradas como fontes à parte — só existe uma fonte para todo
+        # configuradas como fontes à parte: só existe uma fonte para todo
         # o feed. Isto é a própria proteção estrutural contra duplicação.
         source = make_rogeiro_source()
         config = make_config()
@@ -189,34 +251,153 @@ class TestCrossSourceDedup(unittest.TestCase):
         self.assertEqual(dup, [])
 
 
-class TestBackfillWaybackErrorHandling(unittest.TestCase):
-    def test_persistent_cdx_failure_returns_clean_error_not_a_crash(self):
-        from collector import backfill_wayback
+class TestRosterPorSegmento(unittest.TestCase):
+    """O feed do Guerra Fria não publica só Guerra Fria. Creditar o
+    Milhazes por um episódio do Jogos de Poder seria dar tempo de antena a
+    quem não esteve no bloco."""
 
-        with mock.patch("collector.backfill_wayback.time.sleep"), \
-             mock.patch(
-                 "collector.backfill_wayback.get_text",
-                 side_effect=RuntimeError("HTTP Error 403: Forbidden"),
-             ):
-            rc = backfill_wayback.backfill("omny-guerra-fria", "2022-02-24", "2026-09-07")
-        self.assertEqual(rc, 1)
+    def rows_by_guid_program(self):
+        return {(r.program, r.subject) for r in build_guerra_fria()}
 
-    def test_cdx_recovers_after_transient_failures(self):
-        from collector.backfill_wayback import cdx_snapshots
+    def test_jogos_de_poder_no_feed_do_guerra_fria_conta_so_para_rogeiro(self):
+        pairs = self.rows_by_guid_program()
+        self.assertIn(("Jogos de Poder", "rogeiro"), pairs)
+        self.assertNotIn(("Jogos de Poder", "milhazes"), pairs)
 
-        calls = {"n": 0}
+    def test_convida_no_feed_do_guerra_fria_conta_so_para_rogeiro(self):
+        pairs = self.rows_by_guid_program()
+        self.assertIn(("Nuno Rogeiro Convida", "rogeiro"), pairs)
+        self.assertNotIn(("Nuno Rogeiro Convida", "milhazes"), pairs)
 
-        def flaky(url):
-            calls["n"] += 1
-            if calls["n"] < 3:
-                raise RuntimeError("HTTP Error 503: temporario")
-            return '[["timestamp"],["20260101000000"]]'
+    def test_guerra_fria_continua_a_contar_para_os_dois(self):
+        pairs = self.rows_by_guid_program()
+        self.assertIn(("Guerra Fria", "milhazes"), pairs)
+        self.assertIn(("Guerra Fria", "rogeiro"), pairs)
 
-        with mock.patch("collector.backfill_wayback.time.sleep"), \
-             mock.patch("collector.backfill_wayback.get_text", side_effect=flaky):
-            result = cdx_snapshots("https://example.invalid/f.rss", "2022-01-01", "2026-01-01")
-        self.assertEqual(result, ["20260101000000"])
-        self.assertEqual(calls["n"], 3)
+    def test_bloco_de_um_so_interveniente_nao_e_repartido(self):
+        jdp = [r for r in build_guerra_fria() if r.program == "Jogos de Poder"]
+        self.assertEqual(len(jdp), 1)
+        self.assertEqual(jdp[0].participants, 1)
+        self.assertEqual(jdp[0].credited_s, float(jdp[0].duration_s))
+
+    def test_roster_da_fonte_vale_quando_a_regra_nao_declara_elenco(self):
+        # As regras do feed do Rogeiro não declaram roster: manda a fonte.
+        item = self.by_native_id("rogeiro-jdp-0001")
+        source = make_rogeiro_source()
+        rows = attribute.build(item, source, make_config())
+        self.assertEqual([r.subject for r in rows], ["rogeiro"])
+
+    def by_native_id(self, native_id):
+        with mock.patch("collector.sources.podcast_rss.get_text", return_value=FIXTURE):
+            items = list(PodcastRssSource(make_rogeiro_source()).fetch())
+        return next(i for i in items if i.native_id == native_id)
+
+
+class TestDataDeEmissao(unittest.TestCase):
+    """A data que conta é a da emissão, não a da publicação do podcast."""
+
+    def by_program(self):
+        return {r.program: r for r in build_guerra_fria()}
+
+    def test_usa_a_data_declarada_na_sinopse(self):
+        row = self.by_program()["Guerra Fria"]
+        self.assertEqual(row.date, "2026-08-30")
+        self.assertEqual(row.published_at, "2026-09-02")
+        self.assertEqual(row.date_source, "sinopse")
+
+    def test_data_de_publicacao_fica_guardada_para_auditoria(self):
+        for row in build_guerra_fria():
+            self.assertTrue(row.published_at)
+
+    def test_sem_data_declarada_usa_a_publicacao(self):
+        item = RawItem(
+            native_id="x",
+            date="2026-09-06",
+            duration_s=600,
+            title="Bloco emitido sem data no texto",
+            url="",
+            description="Este programa foi emitido na SIC.",
+        )
+        rows = attribute.build(item, make_guerra_fria_source(), make_config())
+        self.assertEqual(rows[0].date, "2026-09-06")
+        self.assertEqual(rows[0].date_source, "publicacao")
+
+    def test_data_implausivel_e_ignorada(self):
+        # Sete meses antes da publicação não é a emissão deste episódio.
+        item = RawItem(
+            native_id="x",
+            date="2026-09-06",
+            duration_s=600,
+            title="Retrospetiva",
+            url="",
+            description="Recorda-se aqui o programa emitido a 2 de fevereiro.",
+        )
+        rows = attribute.build(item, make_guerra_fria_source(), make_config())
+        self.assertEqual(rows[0].date, "2026-09-06")
+        self.assertEqual(rows[0].date_source, "publicacao")
+
+    def test_virada_de_ano(self):
+        item = RawItem(
+            native_id="x",
+            date="2026-01-02",
+            duration_s=600,
+            title="Balanço",
+            url="",
+            description="Programa emitido na SIC a 30 de dezembro.",
+        )
+        rows = attribute.build(item, make_guerra_fria_source(), make_config())
+        self.assertEqual(rows[0].date, "2025-12-30")
+
+    def test_corte_de_data_usa_a_data_de_emissao(self):
+        # Publicado depois do início do tema, emitido antes: fica de fora.
+        item = RawItem(
+            native_id="x",
+            date="2022-03-01",
+            duration_s=600,
+            title="Bloco anterior à invasão",
+            url="",
+            description="Programa emitido na SIC a 20 de fevereiro de 2022.",
+        )
+        quarantine = []
+        rows = attribute.build(item, make_guerra_fria_source(), make_config(), quarantine)
+        self.assertEqual(rows, [])
+        self.assertEqual(quarantine[0]["reason"], "anterior_ao_inicio")
+
+
+class TestProvaGuardada(unittest.TestCase):
+    """Uma decisão que não se pode auditar sem voltar à fonte não é uma
+    decisão auditável."""
+
+    def test_excerto_da_prova_fica_no_registo(self):
+        row = build_guerra_fria()[0]
+        self.assertIn("emitid", row.evidence.lower())
+
+    def test_sem_exigencia_de_prova_o_campo_fica_vazio(self):
+        item = RawItem(
+            native_id="x",
+            date="2026-09-06",
+            duration_s=600,
+            title="Sem prova nenhuma",
+            url="",
+            description="Nada aqui confirma emissão.",
+        )
+        source = make_guerra_fria_source(require_broadcast_evidence=False)
+        rows = attribute.build(item, source, make_config())
+        self.assertEqual(rows[0].evidence, "")
+
+    def test_rejeicao_guarda_excerto_da_sinopse(self):
+        item = RawItem(
+            native_id="x",
+            date="2026-09-06",
+            duration_s=600,
+            title="Sem prova nenhuma",
+            url="",
+            description="Uma sinopse sem qualquer confirmação de ida ao ar.",
+        )
+        quarantine = []
+        attribute.build(item, make_guerra_fria_source(), make_config(), quarantine)
+        self.assertEqual(quarantine[0]["reason"], "sem_evidencia_emissao")
+        self.assertIn("sinopse sem qualquer", quarantine[0]["excerpt"])
 
 
 if __name__ == "__main__":

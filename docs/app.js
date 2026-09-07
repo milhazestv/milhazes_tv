@@ -3,7 +3,7 @@
    versionado, para que qualquer número seja contestável contra um commit
    concreto. As únicas contas feitas aqui são somas de um período (semana,
    mês, ano, ou desde o início) a partir das repartições diárias que já
-   vêm prontas no stats.json — nenhuma agregação nova é inventada no
+   vêm prontas no stats.json. Nenhuma agregação nova é inventada no
    browser. */
 
 (function () {
@@ -251,7 +251,7 @@
   }
 
   /* Frase grande: "Este mês já tivemos 4 horas e 22 minutos de
-     Infotainment de Guerra na TV." — o número muda com o período
+     Infotainment de Guerra na TV." O número muda com o período
      escolhido, nunca é o total acumulado disfarçado de outra coisa. */
   function renderHero(panel, topic, range) {
     var periodo = PERIODOS.filter(function (p) { return p.id === state.period; })[0];
@@ -345,7 +345,7 @@
     panel.appendChild(section);
   }
 
-  /* Não é filtrado pelo período escolhido — mostra sempre a evolução
+  /* Não é filtrado pelo período escolhido: mostra sempre a evolução
      completa, porque a pergunta aqui é outra: está a crescer? */
   function renderEvolucao(panel, topic) {
     if (!topic.by_month.length) { return; }

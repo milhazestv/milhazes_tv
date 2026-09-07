@@ -8,6 +8,12 @@
 #   subjects -> quem ou o que é contabilizado dentro do tema
 #   sources  -> de onde vem a informação e como é atribuída
 #
+# Critério de inclusão de um tema:
+#   Conta a rubrica inteira, não o assunto de cada episódio. Um bloco do
+#   Guerra Fria conta na íntegra, quer trate da Ucrânia quer do Médio
+#   Oriente. O sistema não lê nem caracteriza conteúdos, e a Metodologia
+#   diz isto por palavras.
+#
 # Regra de atribuição (attribution):
 #   shared_equal -> um bloco de 20 min com 2 intervenientes conta 10 min a cada
 #   each_full    -> o mesmo bloco conta 20 min a cada
@@ -28,7 +34,8 @@ version: 1
 topics:
   - id: guerra
     name: Infotainment de Guerra
-    question: Quanto tempo de emissão ocupa o comentário permanente sobre a guerra?
+    question: Quanto tempo de emissão ocupam as rubricas de comentário
+      internacional de José Milhazes e Nuno Rogeiro?
     since: '2022-02-24'
     enabled: true
 
@@ -62,15 +69,23 @@ subjects:
 sources:
   # ------------------------------------------------------------------
   # Feeds de podcast (Omny Studio). Duração exata por episódio, sem
-  # scraping. O feed ao vivo só expõe os últimos 100 episódios — cada
-  # publicador escolhe esse limite do lado dele, não é ajustável por
-  # quem consome o feed. Para o histórico anterior a isso, ver
-  # collector/backfill_wayback.py.
+  # scraping. Estes feeds expõem paginação Atom (rel="next") e devolvem o
+  # histórico quase completo desde 2022, verificado numa corrida real.
+  # Não assumir limites de página a partir de documentação genérica: já
+  # custou a este projeto um módulo inteiro que se veio a revelar
+  # desnecessário.
   # ------------------------------------------------------------------
 
-  # Guerra Fria: rubrica fixa de Milhazes + Rogeiro, sempre os dois.
-  # Foi ao ar às terças no Jornal da Noite até fev/2025; passou depois
-  # para domingo, no mesmo Jornal da Noite.
+  # Guerra Fria: rubrica dos dois comentadores. Foi ao ar às terças no
+  # Jornal da Noite até fev/2025; passou depois para domingo, no mesmo
+  # Jornal da Noite.
+  #
+  # ATENÇÃO: este feed não publica só Guerra Fria. Inclui episódios do
+  # Jogos de Poder e do Nuno Rogeiro Convida, que são só do Rogeiro
+  # (verificado: os mesmos guid aparecem também no feed do Rogeiro).
+  # Sem elenco por segmento, esses blocos seriam creditados ao Milhazes,
+  # que não esteve neles. Por isso o roster vive nas regras de segmento e
+  # não ao nível da fonte.
   - id: omny-guerra-fria
     type: podcast_rss
     enabled: true
@@ -83,12 +98,25 @@ sources:
     attribution: shared_equal
     confidence: high
     require_broadcast_evidence: true
+    segments:
+      - match_any: ['Jogos de Poder']
+        program: Jogos de Poder
+        channel: SIC
+        roster: [rogeiro]
+      - match_any: ['Nuno Rogeiro Convida', 'Rogeiro convida']
+        program: Nuno Rogeiro Convida
+        channel: SIC
+        roster: [rogeiro]
+      - match_any: []   # catch-all: o Guerra Fria propriamente dito
+        program: Guerra Fria
+        channel: SIC
+        roster: [milhazes, rogeiro]
 
   # O feed "podcast.rss" do programa de Rogeiro é o superconjunto de
   # TRÊS rubricas distintas (confirmado em omny.fm/shows/.../playlists:
   # as playlists "jogos-de-poder" e "nuno-rogeiro-convida" são
   # subconjuntos desta com os MESMOS episódios). Por isso usamos só
-  # esta fonte, uma vez, e classificamos cada item por segmento —
+  # esta fonte, uma vez, e classificamos cada item por segmento,
   # nunca as playlists derivadas, ou os mesmos blocos entrariam
   # duas vezes.
   - id: omny-rogeiro-show

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Metodologia — Milhazes TV</title>
+<title>Metodologia | Milhazes TV</title>
 <meta name="robots" content="index, follow">
 <link rel="stylesheet" href="style.css">
 <style>
@@ -11,7 +11,7 @@
   main h2 { border: 0; font-size: 1.15rem; margin-top: 2.25rem; }
   main h3 { font-size: 0.98rem; margin-top: 1.5rem; color: var(--ink); }
   main p { margin: 0 0 0.9rem; color: var(--ink-soft); }
-  main ol { color: var(--ink-soft); padding-left: 1.2rem; }
+  main ol, main ul { color: var(--ink-soft); padding-left: 1.2rem; }
   main li { margin-bottom: 0.5rem; }
   main code { font-family: var(--mono); background: var(--panel); padding: 0.1em 0.35em; }
   main pre { font-family: var(--mono); background: var(--panel); padding: 0.9rem 1rem; overflow-x: auto; font-size: 0.88rem; line-height: 1.6; }
@@ -32,6 +32,11 @@
 <p>Este documento é a peça mais importante do projeto. Sem ele, os números não valem nada.</p>
 <h2>O que é medido</h2>
 <p>O tempo de emissão de blocos identificáveis, com data e duração publicadas pelo próprio canal emissor, atribuídos a um tema e a um interveniente.</p>
+<h2>Critério de inclusão</h2>
+<p>A unidade medida é a rubrica, não o assunto de cada episódio.</p>
+<p>Quando uma rubrica entra no tema, entra por inteiro: todos os seus blocos contam, seja qual for o assunto tratado nesse dia. Um episódio do Guerra Fria conta na íntegra quer trate da Ucrânia, do Médio Oriente ou da Venezuela.</p>
+<p>A razão é simples e é uma limitação assumida: este projeto não transcreve nem analisa o conteúdo emitido, e por isso não sabe, episódio a episódio, de que se falou. Contar por assunto exigiria caracterizar conteúdos, que é precisamente o que o projeto não faz. Contar a rubrica inteira é uma regra objetiva, verificável por quem quiser, e que não depende de nenhum juízo sobre o que foi dito.</p>
+<p>Quem discordar da inclusão de uma rubrica tem a lista completa em <code>config/trackers.yml</code> e o dataset por bloco para refazer a conta com outro critério.</p>
 <h2>O que não é medido</h2>
 <p>Não é um censo total da emissão. Não existe acesso público e gratuito a monitorização completa de grelhas em Portugal. O serviço de referência do setor é comercial e não tem API aberta.</p>
 <p>O que este projeto publica é, portanto, um <strong>limite inferior</strong>: o tempo real é igual ou superior ao contabilizado, nunca inferior.</p>
@@ -41,25 +46,24 @@
 <tr><td>YouTube Data API v3 dos canais</td><td>duração real do vídeo publicado</td><td>média</td></tr>
 </tbody></table>
 <p>Cada registo guarda a fonte que o originou e o URL original. Nada entra no dataset sem proveniência.</p>
+<h2>Data de emissão</h2>
+<p>A data de um bloco é a data em que foi para o ar, não a data em que o episódio foi publicado em podcast. As duas divergem, muitas vezes por dias.</p>
+<p>Quando o emissor declara a data no próprio texto (&quot;emitido na SIC a 7 de setembro&quot;), é essa que conta. Quando não declara, usa-se a data de publicação, que é o melhor dado disponível. Cada registo guarda as duas datas e diz qual foi usada, nos campos <code>date</code>, <code>published_at</code> e <code>date_source</code>, para que a diferença possa ser verificada sem voltar à fonte.</p>
+<p>Uma data declarada só é aceite se cair numa janela plausível face à publicação, ou seja, no mesmo dia ou até 45 dias antes. Fora dessa janela, a leitura é considerada duvidosa e prevalece a data de publicação. É uma escolha conservadora: preferimos uma data menos precisa a uma data errada.</p>
 <h2>Limitações assumidas</h2>
 <ol>
 <li><strong>Podcast e emissão não são a mesma coisa.</strong> A versão em podcast de uma rubrica pode ser cortada ou ligeiramente mais longa do que o que foi para o ar. A diferença não é conhecida nem é estimada. Para reduzir este risco, as fontes que misturam conteúdo exclusivo de podcast com emissões de TV exigem prova textual de que o episódio foi para o ar (<code>require_broadcast_evidence</code>); sem essa prova, o episódio fica de fora e é registado na quarentena.</li>
 <li><strong>Cobertura parcial.</strong> Intervenções que o canal não publica em podcast nem em vídeo não são contabilizadas.</li>
 <li><strong>Atribuição de tempo partilhado.</strong> Um bloco com vários intervenientes não permite saber quem falou quanto tempo sem análise de áudio. Ver abaixo.</li>
 <li><strong>Deteção por texto.</strong> Nas fontes sem elenco fixo, o interveniente é detetado pelo título e pela descrição. Um bloco mal titulado pelo emissor não é apanhado.</li>
-<li><strong>O feed ao vivo só cobre os últimos 100 episódios.</strong> É um limite do publicador do feed, não ajustável por quem o consome. Para o histórico mais antigo, ver "Backfill histórico" abaixo.</li>
-<li><strong>Um feed pode conter mais do que uma rubrica.</strong> Quando isso acontece, cada episódio é classificado por regras de título e duração (<code>segments</code>, em <code>config/trackers.yml</code>), nunca por múltiplas fontes a apontar para o mesmo feed — isso duplicaria tempo.</li>
+<li><strong>A prova de emissão é textual.</strong> Um episódio emitido cuja sinopse não o declare fica de fora. Isso reduz o total publicado e nunca o aumenta, o que é coerente com publicar um limite inferior.</li>
+<li><strong>Um feed pode conter mais do que uma rubrica.</strong> Quando isso acontece, cada episódio é classificado por regras de título e duração (<code>segments</code>, em <code>config/trackers.yml</code>), nunca por múltiplas fontes a apontar para o mesmo feed, o que duplicaria tempo. A mesma regra define o elenco do episódio, para que um bloco de uma rubrica de um só comentador não seja creditado aos dois.</li>
+<li><strong>O canal e o horário de uma rubrica mudam ao longo do tempo.</strong> O canal registado é o da configuração atual da fonte ou do segmento, o que é uma simplificação para blocos antigos.</li>
 </ol>
-<h2>Backfill histórico</h2>
-<p>O feed RSS ao vivo de cada programa só devolve os últimos 100 episódios. Para cobrir o período desde o início do tema, sem essa restrição, existe um comando à parte que lê capturas arquivadas do feed no Wayback Machine (web.archive.org) em vários momentos ao longo do tempo, reconstruindo o histórico contínuo a partir da sobreposição dessas janelas:</p>
-<pre>
-python -m collector.backfill_wayback &lt;id-da-fonte&gt;
-</pre>
-<p>Corre uma vez por fonte (ou de vez em quando, para alargar a cobertura), não faz parte da recolha diária, e usa exatamente as mesmas regras de atribuição, classificação e corte de data da recolha normal — nada aqui tem um critério à parte.</p>
 <h2>Deduplicação entre fontes</h2>
-<p>Se, por engano de configuração, duas fontes alguma vez apontarem para o mesmo episódio de origem, apenas a primeira conta — a segunda é posta de lado e registada com o motivo. Isto é verificado numa corrida completa (ver <code>tests/test_classification.py</code>), não é apenas uma intenção de código.</p>
+<p>Se, por engano de configuração, duas fontes alguma vez apontarem para o mesmo episódio de origem, apenas a primeira conta; a segunda é posta de lado e registada com o motivo. Isto é verificado numa corrida completa (ver <code>tests/test_classification.py</code>), não é apenas uma intenção de código.</p>
 <h2>Definição formal</h2>
-<p>Esta secção é deliberadamente técnica — é a única página do site onde isso acontece. As restantes páginas usam linguagem corrente; aqui, a precisão importa mais do que a fluidez de leitura.</p>
+<p>Esta secção é deliberadamente técnica, e é a única página do site onde isso acontece. As restantes páginas usam linguagem corrente; aqui, a precisão importa mais do que a fluidez de leitura.</p>
 <p><strong>Bloco.</strong> Um bloco <code>B</code> é um evento de emissão identificado, com três propriedades: uma duração <code>D(B)</code> em segundos, uma data <code>t(B)</code>, e um conjunto de intervenientes identificados <code>P(B) = {p₁, ..., pₙ}</code>, com <code>n = |P(B)| ≥ 1</code>.</p>
 <h3>Tempo atribuído a um interveniente, por bloco</h3>
 <p>Para um interveniente <code>p ∈ P(B)</code>, definem-se exatamente duas funções de atribuição:</p>
@@ -67,9 +71,10 @@ python -m collector.backfill_wayback &lt;id-da-fonte&gt;
 leitura dividida  (shared_equal):  c_dividido(p, B) = D(B) / |P(B)|
 leitura completa  (each_full):     c_completo(p, B) = D(B)
 </pre>
-<p>No site, estas duas leituras aparecem com os nomes "Tempo dividido" e "Tempo completo". São as únicas duas publicadas, por uma razão precisa: são as únicas duas que não exigem dados que este projeto não tem. Qualquer valor intermédio (por exemplo, "60/40 porque um fala mais") exigiria transcrição e diarização de áudio — identificar quem fala, ao segundo, dentro de cada bloco — o que este projeto explicitamente não faz (ver Limitações). Sem esses dados, qualquer fração que não seja <code>1/n</code> ou <code>1</code> seria uma estimativa disfarçada de medição. Por isso ambas as leituras aqui publicadas são exatas, não aproximadas: cada uma é uma soma direta de números guardados, nunca um palpite.</p>
+<p>No site, estas duas leituras aparecem com os nomes &quot;Tempo dividido&quot; e &quot;Tempo completo&quot;. São as únicas duas publicadas, por uma razão precisa: são as únicas duas que não exigem dados que este projeto não tem. Qualquer valor intermédio (por exemplo, &quot;60/40 porque um fala mais&quot;) exigiria transcrição e diarização de áudio, ou seja, identificar quem fala, ao segundo, dentro de cada bloco, o que este projeto explicitamente não faz (ver Limitações). Sem esses dados, qualquer fração que não seja <code>1/n</code> ou <code>1</code> seria uma estimativa disfarçada de medição. Por isso ambas as leituras aqui publicadas são exatas, não aproximadas: cada uma é uma soma direta de números guardados, nunca um palpite.</p>
+<p>As duas leituras são calculadas a partir da duração do bloco e do número de intervenientes, e nunca a partir de um valor pré-calculado por fonte. Assim, mudar a configuração de uma fonte não pode alterar o significado de nenhuma das duas leituras publicadas.</p>
 <h3>Tempo total de um tema, num período</h3>
-<p>O erro mais fácil de cometer nesta conta é somar o tempo de todos os intervenientes de um bloco partilhado — o que daria a um bloco de 20 minutos com dois intervenientes um total de 40 minutos de emissão. Isso seria falso: só houve 20 minutos de televisão. Por isso, o tempo total de emissão de um tema <code>T</code>, entre as datas <code>t0</code> e <code>t1</code>, soma-se sobre o <strong>conjunto de blocos distintos</strong> desse período — nunca sobre as linhas atribuídas a cada interveniente:</p>
+<p>O erro mais fácil de cometer nesta conta é somar o tempo de todos os intervenientes de um bloco partilhado, o que daria a um bloco de 20 minutos com dois intervenientes um total de 40 minutos de emissão. Isso seria falso: só houve 20 minutos de televisão. Por isso, o tempo total de emissão de um tema <code>T</code>, entre as datas <code>t0</code> e <code>t1</code>, soma-se sobre o <strong>conjunto de blocos distintos</strong> desse período, nunca sobre as linhas atribuídas a cada interveniente:</p>
 <pre>
 Emissão(T, t0, t1) = Σ D(B), para todo B com t(B) ∈ [t0, t1]
 </pre>
@@ -86,27 +91,22 @@ Tempo(p, t0, t1) = Σ c(p, B), para todo B com t(B) ∈ [t0, t1] e p ∈ P(B)
 <tr><td>Este ano</td><td>1 de janeiro do ano corrente</td><td>hoje</td></tr>
 <tr><td>Desde a guerra</td><td>data de início do tema (2022-02-24)</td><td>hoje</td></tr>
 </tbody></table>
-<p>Todos os quatro usam exatamente as fórmulas acima. Nenhum período tem uma regra de cálculo diferente dos outros — só o intervalo <code>[t0, t1]</code> muda.</p>
+<p>Todos os quatro usam exatamente as fórmulas acima. Nenhum período tem uma regra de cálculo diferente dos outros: só o intervalo <code>[t0, t1]</code> muda.</p>
 <h3>Nota sobre arredondamento</h3>
-<p>Os valores diários guardados em <code>docs/data/stats.json</code> são arredondados ao segundo antes de serem escritos. Somar <code>k</code> dias já arredondados pode divergir do total exato do período em, no máximo, <code>k</code> segundos — por acumulação do erro de arredondamento, nunca por um enviesamento sistemático (arredonda-se sempre ao valor mais próximo, nunca sempre para cima ou sempre para baixo). Numa escala de horas, este desvio é irrelevante: mesmo no pior caso, um período de 30 dias diverge no máximo 30 segundos, ou seja, menos de 0,003% de um total de 30 horas. Este limite está verificado em <code>tests/test_pipeline.py</code>, não é apenas uma alegação.</p>
+<p>Os valores diários guardados em <code>docs/data/stats.json</code> são arredondados ao segundo antes de serem escritos. Somar <code>k</code> dias já arredondados pode divergir do total exato do período em, no máximo, <code>k</code> segundos, por acumulação do erro de arredondamento, nunca por um enviesamento sistemático (arredonda-se sempre ao valor mais próximo, nunca sempre para cima ou sempre para baixo). Numa escala de horas, este desvio é irrelevante: mesmo no pior caso, um período de 30 dias diverge no máximo 30 segundos, ou seja, menos de 0,003% de um total de 30 horas. Este limite está verificado em <code>tests/test_pipeline.py</code>, não é apenas uma alegação.</p>
 <h2>Auditoria</h2>
-<p>O dataset completo está em <code>docs/data/appearances.json</code> e é descarregável a partir do próprio site.</p>
-<p>Os episódios rejeitados nesta corrida — antes do início do tema, sem prova de emissão, sem interveniente identificado, ou duplicados entre fontes — ficam em <code>docs/data/quarantine.json</code>, com o motivo. Nada desaparece em silêncio.</p>
-<p>A recolha corre em integração contínua, nunca à mão. O histórico de commits mostra cada alteração.</p>
-<p>As regras de atribuição estão todas num único ficheiro, <code>collector/attribute.py</code>, com menos de cem linhas.</p>
-<p>A configuração de temas, intervenientes e fontes está em <code>config/trackers.yml</code>. Nenhuma decisão editorial está escondida no código.</p>
+<ul>
+<li>O dataset completo está em <code>docs/data/appearances.json</code> e é descarregável a partir do próprio site. Cada registo guarda a duração do bloco, o número de intervenientes, as duas datas, a origem da data e o excerto do texto que serviu de prova de emissão.</li>
+<li>Os episódios rejeitados nesta corrida, seja por serem anteriores ao início do tema, por não terem prova de emissão, por não terem interveniente identificado ou por estarem duplicados entre fontes, ficam em <code>docs/data/quarantine.json</code>, com o motivo e um excerto da sinopse. Nada desaparece em silêncio.</li>
+<li>A recolha corre em integração contínua, nunca à mão. O histórico de commits mostra cada alteração.</li>
+<li>As regras de atribuição estão todas num único ficheiro curto, <code>collector/attribute.py</code>, feito para ser lido por inteiro por quem quiser contestar os números.</li>
+<li>A configuração de temas, intervenientes e fontes está em <code>config/trackers.yml</code>. Nenhuma decisão editorial está escondida no código.</li>
+</ul>
 <h2>Correções</h2>
 <p>Erros factuais são corrigidos e a correção fica visível no histórico. Registos nunca são apagados em silêncio.</p>
 <h2>Âmbito</h2>
 <p>O projeto publica quantidades de tempo de emissão. Não caracteriza conteúdos, não atribui intenções e não avalia a qualidade do que é dito. Quem quiser tirar conclusões tem os dados para o fazer.</p>
 </main>
-
-<footer class="colofon">
-  <div class="colofon-block">
-    <p><a href="data/appearances.json" download>Descarregar todos os dados</a></p>
-    <p><a href="data/quarantine.json" download>Ver o que ficou de fora</a></p>
-  </div>
-</footer>
 
 </body>
 </html>

@@ -9,7 +9,7 @@ diaria nunca fique sem resultado por causa de um feed offline.
 
 Deduplicação entre fontes: se duas fontes configuradas alguma vez
 devolverem o mesmo native_id (o guid do clipe de origem), só a primeira
-conta — a segunda vai para a quarentena com o motivo
+conta, e a segunda vai para a quarentena com o motivo
 "duplicado_entre_fontes". Isto é a rede de segurança contra o cenário que
 já aconteceu uma vez neste projeto: duas fontes a apontar, sem se saber,
 para o mesmo episódio.
@@ -30,7 +30,7 @@ def dedupe_native(
     items: list, source_id: str, seen_native: dict[str, str]
 ) -> tuple[list, list[dict]]:
     """Separa os itens já vistos, com outro source_id, nesta corrida.
-    `seen_native` é partilhado e mutado entre chamadas sucessivas — uma
+    `seen_native` é partilhado e mutado entre chamadas sucessivas, uma
     por fonte, na ordem em que as fontes são processadas."""
     accepted = []
     duplicates = []

@@ -58,9 +58,15 @@ class SegmentRule:
     programas no mesmo feed (ex.: um feed de podcast que mistura Leste/Oeste,
     Jogos de Poder e Nuno Rogeiro Convida).
 
-    As regras são tentadas por ordem; a primeira que corresponder define o
-    programa e o canal do item. Uma regra sem match_any funciona como
-    catch-all — deve ser sempre a última da lista.
+    As regras sao tentadas por ordem; a primeira que corresponder define o
+    programa, o canal e, quando declarado, o elenco do item. Uma regra sem
+    match_any funciona como catch-all e deve ser sempre a ultima da lista.
+
+    `roster` existe porque um feed pode misturar rubricas com elencos
+    diferentes: o feed do Guerra Fria (dos dois comentadores) publica
+    tambem episodios do Jogos de Poder, que e de um so. Sem elenco por
+    segmento, esses blocos seriam creditados a quem nao esteve no ar.
+    Vazio significa "usar o roster da fonte".
     """
 
     match_any: tuple[str, ...] = ()
@@ -68,6 +74,7 @@ class SegmentRule:
     channel: str = ""
     duration_min: int = 0
     duration_max: int = 0
+    roster: tuple[str, ...] = ()
 
     def matches(self, text: str, duration_s: int) -> bool:
         if self.match_any:
@@ -111,8 +118,15 @@ class Source:
 class Appearance:
     """Uma unidade de emissao atribuida a um subject.
 
+    date         -> data de emissao (ver date_source)
+    date_source  -> "sinopse" se a data foi declarada pelo emissor no texto,
+                    "publicacao" se so se conhece a data de publicacao
+    published_at -> data de publicacao no feed, guardada sempre, para que a
+                    diferenca entre as duas seja auditavel sem voltar a fonte
     duration_s   -> duracao bruta do bloco emitido
     credited_s   -> duracao atribuida a este subject, ja com a regra de rateio
+    evidence     -> excerto do texto que serviu de prova de emissao, vazio
+                    quando a fonte nao exige prova
     """
 
     id: str
@@ -131,6 +145,9 @@ class Appearance:
     attribution: str
     title: str
     url: str
+    date_source: str = "publicacao"
+    published_at: str = ""
+    evidence: str = ""
     first_seen: str = ""
 
     def to_dict(self) -> dict:
@@ -194,6 +211,7 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
                     channel=rule.get("channel", ""),
                     duration_min=int(rule.get("duration_min", 0) or 0),
                     duration_max=int(rule.get("duration_max", 0) or 0),
+                    roster=tuple(rule.get("roster", []) or []),
                 )
                 for rule in s.get("segments", [])
             ),

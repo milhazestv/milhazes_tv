@@ -51,6 +51,19 @@ def _key(row: dict) -> str:
     return row.get("block_id") or row["id"]
 
 
+def _shared(row: dict) -> float:
+    """Leitura dividida do bloco para este interveniente.
+
+    Calculada sempre a partir da duracao e do numero de intervenientes, e
+    nunca a partir de `credited_s`: `credited_s` segue a regra de
+    atribuicao da fonte e, numa fonte configurada como `each_full`, seria
+    o bloco inteiro. As duas leituras publicadas tem de ser as duas
+    leituras verdadeiras, seja qual for a configuracao da fonte.
+    """
+    participants = row.get("participants") or 1
+    return row["duration_s"] / participants
+
+
 def build(rows: list[dict], config: Config) -> dict:
     by_topic: dict[str, list[dict]] = defaultdict(list)
     for row in rows:
@@ -69,7 +82,7 @@ def build(rows: list[dict], config: Config) -> dict:
         per_program: dict = defaultdict(_blocks)
         per_subject: dict = defaultdict(_empty_subject)
 
-        # Repartições por dia — o que permite ao site somar qualquer
+        # Repartições por dia, o que permite ao site somar qualquer
         # período (semana, mês, ano, desde sempre) sem nova agregação.
         subject_by_day: dict = defaultdict(lambda: defaultdict(_empty_subject))
         program_by_day: dict = defaultdict(lambda: defaultdict(_blocks))
@@ -87,12 +100,12 @@ def build(rows: list[dict], config: Config) -> dict:
             program_by_day[date][program][key] = duration
 
             bucket = per_subject[row["subject"]]
-            bucket["shared_equal"] += row["credited_s"]
+            bucket["shared_equal"] += _shared(row)
             bucket["each_full"] += duration
             bucket["blocks"].add(key)
 
             day_bucket = subject_by_day[date][row["subject"]]
-            day_bucket["shared_equal"] += row["credited_s"]
+            day_bucket["shared_equal"] += _shared(row)
             day_bucket["each_full"] += duration
             day_bucket["blocks"].add(key)
 
@@ -156,7 +169,7 @@ def build(rows: list[dict], config: Config) -> dict:
         )
 
     return {
-        "schema": 1,
+        "schema": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "default_attribution": "shared_equal",
         "topics": topics,

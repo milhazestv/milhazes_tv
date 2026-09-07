@@ -44,7 +44,7 @@ def merge(existing: dict[str, dict], incoming: list[Appearance]) -> tuple[dict, 
 def save(rows: dict[str, dict], path: Path = APPEARANCES) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     ordered = sorted(rows.values(), key=lambda r: (r["date"], r["id"]))
-    payload = {"schema": 1, "count": len(ordered), "appearances": ordered}
+    payload = {"schema": 2, "count": len(ordered), "appearances": ordered}
     # sort_keys e indent fixos para que o diff do git seja legivel.
     path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
@@ -54,11 +54,11 @@ def save(rows: dict[str, dict], path: Path = APPEARANCES) -> None:
 
 def save_quarantine(entries: list[dict], path: Path = QUARANTINE) -> None:
     """Itens rejeitados pela recolha, com o motivo. Nada desaparece em
-    silêncio — quem quiser auditar as exclusões tem aqui a lista completa
+    silêncio: quem quiser auditar as exclusões tem aqui a lista completa
     desta corrida."""
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
-        "schema": 1,
+        "schema": 2,
         "count": len(entries),
         "entries": sorted(entries, key=lambda e: (e["source"], e["date"])),
     }

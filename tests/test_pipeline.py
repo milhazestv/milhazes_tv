@@ -199,7 +199,7 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(first_day["a"]["shared_equal"], 564)
         self.assertEqual(first_day["a"]["blocks"], 1)
         # cada dia é arredondado à parte, por isso somar os dias pode
-        # divergir do total all-time em ±1s por dia com dados — é o
+        # divergir do total all-time em ±1s por dia com dados, que é o
         # mesmo comportamento descrito na Metodologia, não um erro.
         total_a = sum(d["subjects"].get("a", {}).get("shared_equal", 0)
                       for d in topic["subject_by_day"])
@@ -212,9 +212,38 @@ class TestAggregate(unittest.TestCase):
         by_date = {d["date"]: d["programs"] for d in topic["program_by_day"]}
         first_day = by_date["2026-09-02"]
         # o bloco de 2026-09-02 tem os dois intervenientes (a e b) mas
-        # é um único bloco de "Programa" — airtime não duplica.
+        # é um único bloco de "Programa", por isso airtime não duplica.
         self.assertEqual(first_day["Programa"]["airtime_s"], 1129)
         self.assertEqual(first_day["Programa"]["blocks"], 1)
+
+
+class TestLeiturasIndependentesDaFonte(unittest.TestCase):
+    """As duas leituras publicadas têm de ser as duas leituras verdadeiras,
+    seja qual for a regra de atribuição configurada na fonte. Calcular a
+    leitura dividida a partir de credited_s fazia com que uma fonte
+    each_full publicasse o bloco inteiro como se fosse tempo dividido."""
+
+    def _stats(self, attribution):
+        source = make_source(attribution=attribution)
+        config = make_config()
+        with mock.patch("collector.sources.podcast_rss.get_text", return_value=FIXTURE):
+            items = list(PodcastRssSource(source).fetch())
+        rows = []
+        for item in items:
+            rows.extend(r.to_dict() for r in attribute.build(item, source, config))
+        return aggregate.build(rows, config)["topics"][0]
+
+    def test_leituras_iguais_com_shared_equal_e_com_each_full(self):
+        dividido = self._stats("shared_equal")["subjects"][0]["totals"]
+        integral = self._stats("each_full")["subjects"][0]["totals"]
+        self.assertEqual(dividido, integral)
+        self.assertEqual(dividido["shared_equal"], 3200)
+        self.assertEqual(dividido["each_full"], 6399)
+
+    def test_tempo_de_emissao_do_tema_nao_muda_com_a_atribuicao(self):
+        self.assertEqual(
+            self._stats("shared_equal")["totals"], self._stats("each_full")["totals"]
+        )
 
 
 if __name__ == "__main__":
