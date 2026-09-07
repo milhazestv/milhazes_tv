@@ -264,6 +264,19 @@
     } else {
       section.appendChild(el("p", { class: "section-caption", text: "Sem dados para este período." }));
     }
+
+    /* O calendário é a pergunta seguinte desta secção, em que dias cada
+       programa foi para o ar, por isso vive aqui e não no rodapé, onde
+       ninguém o encontrava. Não é filtrado pelo período escolhido: a
+       página mostra sempre o histórico ano a ano, e o texto diz isso
+       para que a ligação não prometa o que a página não faz. */
+    section.appendChild(el("p", { class: "section-link" }, [
+      el("a", {
+        href: "calendario.html",
+        text: "Ver o calendário de emissões, dia a dia, ano a ano"
+      })
+    ]));
+
     panel.appendChild(section);
   }
 
@@ -291,10 +304,14 @@
     return list;
   }
 
-  /* As duas leituras aparecem ao mesmo tempo, sem botão de escolha,
-     porque não são duas versões do mesmo número: são duas perguntas
-     diferentes, e obrigar a escolher entre elas era o que tornava a
-     secção incompreensível.
+  /* O site publica uma só leitura por pessoa, o tempo no ar. A leitura
+     repartida (shared_equal) continua a ser calculada, guardada no
+     stats.json e definida na Metodologia, mas deixou de aparecer aqui:
+     duas grandezas com a mesma unidade, lado a lado, faziam o leitor
+     comum ler dois números diferentes para a mesma pergunta.
+
+     Quem quiser a leitura repartida tem-na no dataset e na Metodologia.
+     Não voltar a pô-la no site sem resolver esse problema de leitura.
 
      Nenhum texto aqui pode assumir que há exatamente duas pessoas: o
      número de intervenientes vem da configuração e pode mudar sem que
@@ -304,7 +321,6 @@
 
     var totalAirtime = sumRange(topic.by_day, range.fromIso, range.toIso, "airtime_s").seconds;
     var noAr = sumSubjectsInRange(topic, range.fromIso, range.toIso, "each_full");
-    var repartido = sumSubjectsInRange(topic, range.fromIso, range.toIso, "shared_equal");
 
     function entriesFrom(totals) {
       return topic.subjects
@@ -332,26 +348,6 @@
         + "não se somam."
     }));
     section.appendChild(renderAirtimeBars(noArEntries, totalAirtime));
-
-    var repartidoEntries = entriesFrom(repartido);
-    var pie = renderPie(repartidoEntries, { ariaLabel: "Tempo repartido por pessoa" });
-    if (pie) {
-      var somado = repartidoEntries.reduce(function (sum, e) { return sum + e.seconds; }, 0);
-      section.appendChild(el("h3", { class: "subhead", text: "E se dividirmos o tempo entre quem lá esteve" }));
-      section.appendChild(el("p", {
-        class: "section-caption",
-        text: "A mesma emissão, repartida: cada bloco é dividido em partes "
-          + "iguais pelas pessoas presentes. Esta é a leitura que fecha as "
-          + "contas, porque a soma dá " + humanDuration(somado)
-          + ", ou seja, o tempo que foi mesmo para o ar."
-      }));
-      section.appendChild(pie);
-      section.appendChild(el("p", {
-        class: "section-caption example",
-        text: "Exemplo: num bloco de 20 minutos com duas pessoas, cada uma "
-          + "esteve no ar 20 minutos, e a cada uma cabem 10 minutos."
-      }));
-    }
 
     panel.appendChild(section);
   }

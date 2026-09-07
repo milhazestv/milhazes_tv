@@ -1,4 +1,4 @@
-/* Milhazes TV — folha de estilo única.
+/* Milhazes TV, folha de estilo única.
    Aspeto: papel pontilhado, autocolantes torcidos, rabiscos. O texto
    mantém-se sóbrio: o humor está na embalagem, nunca nos números.
 
@@ -273,10 +273,17 @@ section h2 {
   margin: 2.25rem 0 0.4rem;
 }
 
-.section-caption.example {
-  margin: 1rem 0 0;
-  padding-left: 0.9rem;
-  border-left: 3px solid var(--bar-1);
+/* Ligação para outra página a partir do fim de uma secção. */
+.section-link {
+  margin: 1.6rem 0 0;
+  font-weight: 600;
+}
+
+.section-link a::after {
+  content: "\2192";
+  display: inline-block;
+  margin-left: 0.35rem;
+  text-decoration: none;
 }
 
 /* ---- gráfico circular --------------------------------------------- */
