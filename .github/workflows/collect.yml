@@ -47,4 +47,17 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/data
           git commit -m "dados: recolha de $(date -u +%Y-%m-%d)"
-          git push
+          # O push pode chegar depois de outro commit ter avancado o main
+          # (outra corrida, ou um push manual) -- sem isto, o git push falha
+          # e os dados recolhidos ficam-se pela maquina da CI, perdidos.
+          for i in 1 2 3 4 5; do
+            if git push; then
+              exit 0
+            fi
+            echo "push rejeitado, a tentar rebase (tentativa $i/5)..."
+            git fetch origin main
+            git rebase origin/main || { git rebase --abort; exit 1; }
+            sleep $((i * 3))
+          done
+          echo "nao foi possivel publicar depois de 5 tentativas" >&2
+          exit 1
