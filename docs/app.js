@@ -1,13 +1,24 @@
-/* Renderiza docs/data/stats.json. Sem dependencias, sem pedidos a terceiros.
-   O site nao calcula nada: o que esta no ecra e exactamente o que esta no
-   ficheiro versionado, para que qualquer numero seja contestavel contra um
-   commit concreto. */
+/* Renderiza docs/data/stats.json. Sem dependências, sem pedidos a terceiros.
+   O site não calcula nada de opinativo: os totais vêm todos do ficheiro
+   versionado, para que qualquer número seja contestável contra um commit
+   concreto. As únicas contas feitas aqui são somas de períodos, a partir
+   de by_day, que já vem agregado no stats.json. */
 
 (function () {
   "use strict";
 
   var BAR_COLOURS = ["var(--bar-1)", "var(--bar-2)", "var(--bar-3)", "var(--bar-4)"];
-  var state = { stats: null, topic: null, reading: "shared_equal" };
+  var MESES = [
+    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
+  ];
+  var PERIODOS = [
+    { id: "day", label: "Hoje" },
+    { id: "week", label: "Esta semana" },
+    { id: "month", label: "Este mês" }
+  ];
+
+  var state = { stats: null, topic: null, reading: "shared_equal", period: "week" };
 
   function pad(n) { return n < 10 ? "0" + n : String(n); }
 
@@ -16,11 +27,43 @@
     return String(Math.floor(s / 3600)) + ":" + pad(Math.floor((s % 3600) / 60)) + ":" + pad(s % 60);
   }
 
+  function humanDuration(seconds) {
+    var s = Math.max(0, Math.round(seconds));
+    if (s < 60) { return "menos de um minuto"; }
+    var h = Math.floor(s / 3600);
+    var m = Math.floor((s % 3600) / 60);
+    var horas = h === 1 ? "1 hora" : h + " horas";
+    var minutos = m === 1 ? "1 minuto" : m + " minutos";
+    if (h === 0) { return minutos; }
+    if (m === 0) { return horas; }
+    return horas + " e " + minutos;
+  }
+
   function days(seconds) { return (seconds / 86400).toFixed(1); }
+
+  function isoDate(date) {
+    return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate());
+  }
+
+  function startOfWeek(date) {
+    var d = new Date(date);
+    var day = d.getDay();
+    var diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    return d;
+  }
+
+  function formatDatePT(date) {
+    return date.getDate() + " de " + MESES[date.getMonth()];
+  }
 
   function monthLabel(iso) {
     var parts = iso.split("-");
     return parts[1] + "/" + parts[0].slice(2);
+  }
+
+  function capitalize(text) {
+    return text.charAt(0).toUpperCase() + text.slice(1);
   }
 
   function el(tag, attrs, children) {
@@ -36,6 +79,39 @@
 
   function currentTopic() {
     return state.stats.topics.filter(function (t) { return t.id === state.topic; })[0];
+  }
+
+  /* Soma os dias de by_day que caem dentro do período escolhido.
+     "Hoje" e "esta semana" usam a data local de quem visita o site;
+     é uma aproximação aceitável para este fim, não um relógio de emissão. */
+  function periodTotals(topic, period) {
+    var today = new Date();
+    var from, to = today, label;
+
+    if (period === "day") {
+      from = today;
+      label = "hoje, " + formatDatePT(today);
+    } else if (period === "month") {
+      from = new Date(today.getFullYear(), today.getMonth(), 1);
+      label = "em " + MESES[today.getMonth()];
+    } else {
+      from = startOfWeek(today);
+      label = "de " + formatDatePT(from) + " a " + formatDatePT(to);
+    }
+
+    var fromIso = isoDate(from);
+    var toIso = isoDate(to);
+    var seconds = 0;
+    var blocks = 0;
+
+    topic.by_day.forEach(function (day) {
+      if (day.date >= fromIso && day.date <= toIso) {
+        seconds += day.airtime_s;
+        blocks += day.blocks;
+      }
+    });
+
+    return { seconds: seconds, blocks: blocks, label: label };
   }
 
   function renderTabs() {
@@ -61,22 +137,53 @@
   function renderEmpty(panel, topic) {
     panel.appendChild(el("div", { class: "empty" }, [
       el("h2", { text: "Ainda sem registos" }),
-      el("p", { text: "Nao ha blocos recolhidos para " + topic.name + "." })
+      el("p", { text: "Não há blocos recolhidos para " + topic.name + "." })
     ]));
   }
 
-  /* Manchete: tempo de relogio. Um bloco com dois intervenientes conta uma
-     vez, nunca duas. A leitura rateada ou integral so faz sentido ao nivel
-     do interveniente e e la que o selector aparece. */
+  /* Cabeçalho: o número do período escolhido, não o total acumulado.
+     "Esta semana já tivemos 3 horas de Infotainment de Guerra na TV." */
   function renderHero(panel, topic) {
-    var total = topic.totals.airtime_s;
-    panel.appendChild(el("p", { class: "question", text: topic.question }));
-    panel.appendChild(el("p", { class: "hero-figure", text: timecode(total) }));
+    var period = periodTotals(topic, state.period);
+    var periodoAtivo = PERIODOS.filter(function (p) { return p.id === state.period; })[0];
+
+    var selector = el("div", { class: "period-selector", role: "tablist", "aria-label": "Período" });
+    PERIODOS.forEach(function (p) {
+      var button = el("button", {
+        class: "period-btn",
+        type: "button",
+        role: "tab",
+        "aria-selected": String(p.id === state.period),
+        text: p.label
+      });
+      button.addEventListener("click", function () {
+        state.period = p.id;
+        renderPanel();
+      });
+      selector.appendChild(button);
+    });
+    panel.appendChild(selector);
+
+    var frase = period.seconds > 0
+      ? capitalize(periodoAtivo.label.toLowerCase()) + " já tivemos"
+      : capitalize(periodoAtivo.label.toLowerCase()) + " ainda não houve";
+
+    panel.appendChild(el("p", { class: "hero-lead", text: frase }));
+    panel.appendChild(el("p", {
+      class: "hero-figure",
+      text: period.seconds > 0 ? humanDuration(period.seconds) : "registos"
+    }));
+    panel.appendChild(el("p", { class: "hero-tail", text: "de " + topic.name + " na TV." }));
     panel.appendChild(el("p", {
       class: "hero-caption",
-      text: "de emissao contabilizada entre " + topic.first_record + " e " +
-            topic.last_record + ", em " + topic.totals.blocks +
-            " blocos. Equivale a " + days(total) + " dias de emissao continua."
+      text: (period.blocks === 1 ? "1 bloco" : period.blocks + " blocos") + " " + period.label + "."
+    }));
+
+    panel.appendChild(el("p", {
+      class: "hero-cumulative",
+      text: "Desde " + topic.since + ", o total acumulado é de " + timecode(topic.totals.airtime_s) +
+            " em " + topic.totals.blocks + " blocos — o equivalente a " + days(topic.totals.airtime_s) +
+            " dias de emissão contínua."
     }));
   }
 
@@ -108,7 +215,7 @@
     section.appendChild(el("p", {
       class: "subject-meta",
       text: state.reading === "shared_equal"
-        ? "Um bloco partilhado e dividido em partes iguais pelos intervenientes."
+        ? "Um bloco partilhado é dividido em partes iguais pelos intervenientes."
         : "Cada bloco conta por inteiro para cada interveniente presente."
     }));
 
@@ -142,7 +249,7 @@
     var slot = width / months.length;
 
     var svg = '<svg class="chart" viewBox="0 0 ' + width + ' ' + height +
-      '" role="img" aria-label="Tempo de emissao por mes">';
+      '" role="img" aria-label="Tempo de emissão por mês">';
     months.forEach(function (month, i) {
       var barHeight = max ? (month.airtime_s / max) * (height - padBottom - 6) : 0;
       svg += '<rect x="' + (i * slot + slot * 0.15).toFixed(1) +
@@ -160,7 +267,7 @@
       '" x2="' + width + '" y2="' + (height - padBottom) + '"/></svg>';
 
     panel.appendChild(el("section", {}, [
-      el("h2", { text: "Por mes" }),
+      el("h2", { text: "Por mês" }),
       el("div", { html: svg })
     ]));
   }
@@ -183,7 +290,7 @@
         el("thead", {}, [
           el("tr", {}, [
             el("th", { text: "Programa" }),
-            el("th", { class: "num", text: "Emissao" }),
+            el("th", { class: "num", text: "Emissão" }),
             el("th", { class: "num", text: "Blocos" })
           ])
         ]),
@@ -209,7 +316,7 @@
     state.reading = stats.default_attribution || "shared_equal";
     state.topic = stats.topics.length ? stats.topics[0].id : null;
     document.getElementById("generated").textContent =
-      "Ultima recolha: " + stats.generated_at.replace("T", " ").replace("+00:00", " UTC");
+      "Última recolha: " + stats.generated_at.replace("T", " ").replace("+00:00", " UTC");
     renderTabs();
     renderPanel();
   }
@@ -221,11 +328,12 @@
     })
     .then(boot)
     .catch(function () {
-      /* Estado vazio explicito. Nunca mostrar dados de exemplo: um site de
-         factos que inventa numeros para a demo perde o unico argumento que tem. */
+      /* Estado vazio explícito. Nunca mostrar dados de exemplo: um site de
+         factos que inventa números para a demonstração perde o único
+         argumento que tem. */
       document.getElementById("panel").innerHTML =
-        '<div class="empty"><h2>Dados indisponiveis</h2>' +
-        '<p>Nao foi possivel carregar <code>data/stats.json</code>. ' +
+        '<div class="empty"><h2>Dados indisponíveis</h2>' +
+        '<p>Não foi possível carregar <code>data/stats.json</code>. ' +
         'Correr <code>python -m collector.main</code> para gerar o ficheiro.</p></div>';
     });
 })();

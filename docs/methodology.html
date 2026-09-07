@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="pt">
+<html lang="pt-PT">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Metodologia - Milhazes TV</title>
+<title>Metodologia — Milhazes TV</title>
 <meta name="robots" content="index, follow">
 <link rel="stylesheet" href="style.css">
 <style>
@@ -25,39 +25,39 @@
 </header>
 
 <main>
-<p>Este documento e a peca mais importante do projecto. Sem ele os numeros nao valem nada.</p>
-<h2>O que e medido</h2>
-<p>O tempo de emissao de blocos identificaveis, com data e duracao publicadas pelo proprio canal emissor, atribuidos a um tema e a um interveniente.</p>
-<h2>O que nao e medido</h2>
-<p>Nao e um censo total da emissao. Nao existe acesso publico e gratuito a monitorizacao completa de grelhas em Portugal. O servico de referencia do setor e comercial e nao tem API aberta.</p>
-<p>O que este projecto publica e portanto um <strong>limite inferior</strong>: o tempo real e igual ou superior ao contabilizado, nunca inferior.</p>
+<p>Este documento é a peça mais importante do projeto. Sem ele, os números não valem nada.</p>
+<h2>O que é medido</h2>
+<p>O tempo de emissão de blocos identificáveis, com data e duração publicadas pelo próprio canal emissor, atribuídos a um tema e a um interveniente.</p>
+<h2>O que não é medido</h2>
+<p>Não é um censo total da emissão. Não existe acesso público e gratuito a monitorização completa de grelhas em Portugal. O serviço de referência do setor é comercial e não tem API aberta.</p>
+<p>O que este projeto publica é, portanto, um <strong>limite inferior</strong>: o tempo real é igual ou superior ao contabilizado, nunca inferior.</p>
 <h2>Fontes</h2>
 <table><thead><tr><th>Tipo</th><th>O que dá</th><th>Fiabilidade</th></tr></thead><tbody>
-<tr><td>Feeds RSS de podcast dos proprios canais</td><td>data e duracao declaradas pelo emissor, por episodio</td><td>alta</td></tr>
-<tr><td>YouTube Data API v3 dos canais</td><td>duracao real do video publicado</td><td>media</td></tr>
+<tr><td>Feeds RSS de podcast dos próprios canais</td><td>data e duração declaradas pelo emissor, por episódio</td><td>alta</td></tr>
+<tr><td>YouTube Data API v3 dos canais</td><td>duração real do vídeo publicado</td><td>média</td></tr>
 </tbody></table>
-<p>Cada registo guarda a fonte que o originou e o URL original. Nada entra no dataset sem proveniencia.</p>
-<h2>Limitacoes assumidas</h2>
+<p>Cada registo guarda a fonte que o originou e o URL original. Nada entra no dataset sem proveniência.</p>
+<h2>Limitações assumidas</h2>
 <ol>
-<li><strong>Podcast e emissao nao sao a mesma coisa.</strong> A versao em podcast de uma rubrica pode ser cortada ou ligeiramente mais longa do que o que foi para o ar. A diferenca nao e conhecida e nao e estimada.</li>
-<li><strong>Cobertura parcial.</strong> Intervencoes que o canal nao publica em podcast nem em video nao sao contabilizadas.</li>
-<li><strong>Atribuicao de tempo partilhado.</strong> Um bloco com varios intervenientes nao permite saber quem falou quanto tempo sem analise de audio. Ver abaixo.</li>
-<li><strong>Deteccao por texto.</strong> Nas fontes sem elenco fixo, o interveniente e detectado pelo titulo e descricao. Um bloco mal titulado pelo emissor nao e apanhado.</li>
-</ul>
-<h2>Regra de atribuicao</h2>
+<li><strong>Podcast e emissão não são a mesma coisa.</strong> A versão em podcast de uma rubrica pode ser cortada ou ligeiramente mais longa do que o que foi para o ar. A diferença não é conhecida nem é estimada.</li>
+<li><strong>Cobertura parcial.</strong> Intervenções que o canal não publica em podcast nem em vídeo não são contabilizadas.</li>
+<li><strong>Atribuição de tempo partilhado.</strong> Um bloco com vários intervenientes não permite saber quem falou quanto tempo sem análise de áudio. Ver abaixo.</li>
+<li><strong>Deteção por texto.</strong> Nas fontes sem elenco fixo, o interveniente é detetado pelo título e pela descrição. Um bloco mal titulado pelo emissor não é apanhado.</li>
+</ol>
+<h2>Regra de atribuição</h2>
 <p>Um bloco de 20 minutos com dois intervenientes admite duas leituras:</p>
-<p><strong>Tempo rateado</strong> (<code>shared_equal</code>): 10 minutos a cada. E a leitura por omissao, por ser a conservadora.</p>
-<p><strong>Bloco integral</strong> (<code>each_full</code>): 20 minutos a cada. Mede presenca em antena, nao tempo de fala.</p>
-<p>O dataset guarda <code>duration_s</code> e <code>credited_s</code> em campos separados, por isso as duas leituras sao sempre reconstruiveis sem nova recolha. O site permite alternar entre elas.</p>
+<p><strong>Tempo rateado</strong> (<code>shared_equal</code>): 10 minutos a cada. É a leitura por omissão, por ser a conservadora.</p>
+<p><strong>Bloco integral</strong> (<code>each_full</code>): 20 minutos a cada. Mede presença em antena, não tempo de fala.</p>
+<p>O dataset guarda <code>duration_s</code> e <code>credited_s</code> em campos separados, por isso as duas leituras são sempre reconstruíveis sem nova recolha. O site permite alternar entre elas.</p>
 <h2>Auditoria</h2>
-<p>O dataset completo esta em <code>docs/data/appearances.json</code> e e descarregavel do proprio site.</p>
-<p>A recolha corre em integracao continua, nunca a mao. O historico de commits mostra cada alteracao.</p>
-<p>As regras de atribuicao estao todas num unico ficheiro, <code>collector/attribute.py</code>, com menos de cem linhas.</p>
-<p>A configuracao de temas e intervenientes esta em <code>config/trackers.yml</code>. Nenhuma decisao editorial esta escondida no codigo.</p>
-<h2>Correccoes</h2>
-<p>Erros factuais sao corrigidos e a correccao fica visivel no historico. Registos nunca sao apagados em silencio.</p>
-<h2>Ambito</h2>
-<p>O projecto publica quantidades de tempo de emissao. Nao caracteriza conteudos, nao atribui intencoes e nao avalia a qualidade do que e dito. Quem quiser tirar conclusoes tem os dados para o fazer.</p>
+<p>O dataset completo está em <code>docs/data/appearances.json</code> e é descarregável a partir do próprio site.</p>
+<p>A recolha corre em integração contínua, nunca à mão. O histórico de commits mostra cada alteração.</p>
+<p>As regras de atribuição estão todas num único ficheiro, <code>collector/attribute.py</code>, com menos de cem linhas.</p>
+<p>A configuração de temas e intervenientes está em <code>config/trackers.yml</code>. Nenhuma decisão editorial está escondida no código.</p>
+<h2>Correções</h2>
+<p>Erros factuais são corrigidos e a correção fica visível no histórico. Registos nunca são apagados em silêncio.</p>
+<h2>Âmbito</h2>
+<p>O projeto publica quantidades de tempo de emissão. Não caracteriza conteúdos, não atribui intenções e não avalia a qualidade do que é dito. Quem quiser tirar conclusões tem os dados para o fazer.</p>
 </main>
 
 <footer class="colofon">

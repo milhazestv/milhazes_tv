@@ -1,53 +1,53 @@
 # Metodologia
 
-Este documento e a peca mais importante do projecto. Sem ele os numeros nao valem nada.
+Este documento é a peça mais importante do projeto. Sem ele, os números não valem nada.
 
-## O que e medido
+## O que é medido
 
-O tempo de emissao de blocos identificaveis, com data e duracao publicadas pelo proprio canal emissor, atribuidos a um tema e a um interveniente.
+O tempo de emissão de blocos identificáveis, com data e duração publicadas pelo próprio canal emissor, atribuídos a um tema e a um interveniente.
 
-## O que nao e medido
+## O que não é medido
 
-Nao e um censo total da emissao. Nao existe acesso publico e gratuito a monitorizacao completa de grelhas em Portugal. O servico de referencia do setor e comercial e nao tem API aberta.
+Não é um censo total da emissão. Não existe acesso público e gratuito a monitorização completa de grelhas em Portugal. O serviço de referência do setor é comercial e não tem API aberta.
 
-O que este projecto publica e portanto um **limite inferior**: o tempo real e igual ou superior ao contabilizado, nunca inferior.
+O que este projeto publica é, portanto, um **limite inferior**: o tempo real é igual ou superior ao contabilizado, nunca inferior.
 
 ## Fontes
 
-| Tipo | O que da | Fiabilidade |
+| Tipo | O que dá | Fiabilidade |
 |---|---|---|
-| Feeds RSS de podcast dos proprios canais | data e duracao declaradas pelo emissor, por episodio | alta |
-| YouTube Data API v3 dos canais | duracao real do video publicado | media |
+| Feeds RSS de podcast dos próprios canais | data e duração declaradas pelo emissor, por episódio | alta |
+| YouTube Data API v3 dos canais | duração real do vídeo publicado | média |
 
-Cada registo guarda a fonte que o originou e o URL original. Nada entra no dataset sem proveniencia.
+Cada registo guarda a fonte que o originou e o URL original. Nada entra no dataset sem proveniência.
 
-## Limitacoes assumidas
+## Limitações assumidas
 
-1. **Podcast e emissao nao sao a mesma coisa.** A versao em podcast de uma rubrica pode ser cortada ou ligeiramente mais longa do que o que foi para o ar. A diferenca nao e conhecida e nao e estimada.
-2. **Cobertura parcial.** Intervencoes que o canal nao publica em podcast nem em video nao sao contabilizadas.
-3. **Atribuicao de tempo partilhado.** Um bloco com varios intervenientes nao permite saber quem falou quanto tempo sem analise de audio. Ver abaixo.
-4. **Deteccao por texto.** Nas fontes sem elenco fixo, o interveniente e detectado pelo titulo e descricao. Um bloco mal titulado pelo emissor nao e apanhado.
+1. **Podcast e emissão não são a mesma coisa.** A versão em podcast de uma rubrica pode ser cortada ou ligeiramente mais longa do que o que foi para o ar. A diferença não é conhecida nem é estimada.
+2. **Cobertura parcial.** Intervenções que o canal não publica em podcast nem em vídeo não são contabilizadas.
+3. **Atribuição de tempo partilhado.** Um bloco com vários intervenientes não permite saber quem falou quanto tempo sem análise de áudio. Ver abaixo.
+4. **Deteção por texto.** Nas fontes sem elenco fixo, o interveniente é detetado pelo título e pela descrição. Um bloco mal titulado pelo emissor não é apanhado.
 
-## Regra de atribuicao
+## Regra de atribuição
 
 Um bloco de 20 minutos com dois intervenientes admite duas leituras:
 
-- **Tempo rateado** (`shared_equal`): 10 minutos a cada. E a leitura por omissao, por ser a conservadora.
-- **Bloco integral** (`each_full`): 20 minutos a cada. Mede presenca em antena, nao tempo de fala.
+- **Tempo rateado** (`shared_equal`): 10 minutos a cada. É a leitura por omissão, por ser a conservadora.
+- **Bloco integral** (`each_full`): 20 minutos a cada. Mede presença em antena, não tempo de fala.
 
-O dataset guarda `duration_s` e `credited_s` em campos separados, por isso as duas leituras sao sempre reconstruiveis sem nova recolha. O site permite alternar entre elas.
+O dataset guarda `duration_s` e `credited_s` em campos separados, por isso as duas leituras são sempre reconstruíveis sem nova recolha. O site permite alternar entre elas.
 
 ## Auditoria
 
-- O dataset completo esta em `docs/data/appearances.json` e e descarregavel do proprio site.
-- A recolha corre em integracao continua, nunca a mao. O historico de commits mostra cada alteracao.
-- As regras de atribuicao estao todas num unico ficheiro, `collector/attribute.py`, com menos de cem linhas.
-- A configuracao de temas e intervenientes esta em `config/trackers.yml`. Nenhuma decisao editorial esta escondida no codigo.
+- O dataset completo está em `docs/data/appearances.json` e é descarregável a partir do próprio site.
+- A recolha corre em integração contínua, nunca à mão. O histórico de commits mostra cada alteração.
+- As regras de atribuição estão todas num único ficheiro, `collector/attribute.py`, com menos de cem linhas.
+- A configuração de temas e intervenientes está em `config/trackers.yml`. Nenhuma decisão editorial está escondida no código.
 
-## Correccoes
+## Correções
 
-Erros factuais sao corrigidos e a correccao fica visivel no historico. Registos nunca sao apagados em silencio.
+Erros factuais são corrigidos e a correção fica visível no histórico. Registos nunca são apagados em silêncio.
 
-## Ambito
+## Âmbito
 
-O projecto publica quantidades de tempo de emissao. Nao caracteriza conteudos, nao atribui intencoes e nao avalia a qualidade do que e dito. Quem quiser tirar conclusoes tem os dados para o fazer.
+O projeto publica quantidades de tempo de emissão. Não caracteriza conteúdos, não atribui intenções e não avalia a qualidade do que é dito. Quem quiser tirar conclusões tem os dados para o fazer.

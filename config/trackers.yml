@@ -19,26 +19,26 @@ version: 1
 topics:
   - id: guerra
     name: Infotainment de Guerra
-    question: Quanto tempo de emissao ocupa o comentario permanente sobre guerra?
+    question: Quanto tempo de emissão ocupa o comentário permanente sobre a guerra?
     since: '2022-02-24'
     enabled: true
 
   - id: crime
     name: Crime na grelha
-    question: Quanto tempo de emissao ocupam os programas dedicados a crime?
+    question: Quanto tempo de emissão ocupam os programas dedicados a crime?
     since: '2022-01-01'
     enabled: false
 
   - id: ventura
-    name: Tempo de antena de Andre Ventura
-    question: Quanto tempo de emissao ocupam entrevistas e conferencias de imprensa?
+    name: Tempo de antena de André Ventura
+    question: Quanto tempo de emissão ocupam entrevistas e conferências de imprensa?
     since: '2022-01-01'
     enabled: false
 
 subjects:
   - id: milhazes
     topic: guerra
-    display_name: Jose Milhazes
+    display_name: José Milhazes
     role: comentador
     match:
       any: [milhazes]
