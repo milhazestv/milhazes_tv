@@ -53,6 +53,38 @@ class Topic:
 
 
 @dataclass(frozen=True)
+class SegmentRule:
+    """Regra de classificação de um item dentro de uma fonte com vários
+    programas no mesmo feed (ex.: um feed de podcast que mistura Leste/Oeste,
+    Jogos de Poder e Nuno Rogeiro Convida).
+
+    As regras são tentadas por ordem; a primeira que corresponder define o
+    programa e o canal do item. Uma regra sem match_any funciona como
+    catch-all — deve ser sempre a última da lista.
+    """
+
+    match_any: tuple[str, ...] = ()
+    program: str = ""
+    channel: str = ""
+    duration_min: int = 0
+    duration_max: int = 0
+
+    def matches(self, text: str, duration_s: int) -> bool:
+        if self.match_any:
+            haystack = slugify(text)
+            if not any(
+                re.search(rf"\b{re.escape(slugify(term))}\b", haystack)
+                for term in self.match_any
+            ):
+                return False
+        if self.duration_min and duration_s < self.duration_min:
+            return False
+        if self.duration_max and duration_s > self.duration_max:
+            return False
+        return True
+
+
+@dataclass(frozen=True)
 class Source:
     id: str
     type: str
@@ -67,6 +99,12 @@ class Source:
     attribution: str = "shared_equal"
     confidence: str = "medium"
     query_terms: tuple[str, ...] = ()
+    # Um feed que mistura programas classifica cada item por estas regras
+    # em vez de usar um programa/canal fixo. Ver SegmentRule acima.
+    segments: tuple[SegmentRule, ...] = ()
+    # Exige que a sinopse contenha prova de que foi para o ar (uma forma de
+    # "emitido"/"exibido"), não só publicado em podcast. Ver attribute.py.
+    require_broadcast_evidence: bool = False
 
 
 @dataclass
@@ -149,6 +187,17 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
             attribution=s.get("attribution", "shared_equal"),
             confidence=s.get("confidence", "medium"),
             query_terms=tuple(s.get("query_terms", [])),
+            segments=tuple(
+                SegmentRule(
+                    match_any=tuple(rule.get("match_any", [])),
+                    program=rule.get("program", ""),
+                    channel=rule.get("channel", ""),
+                    duration_min=int(rule.get("duration_min", 0) or 0),
+                    duration_max=int(rule.get("duration_max", 0) or 0),
+                )
+                for rule in s.get("segments", [])
+            ),
+            require_broadcast_evidence=s.get("require_broadcast_evidence", False),
         )
         for s in raw.get("sources", [])
     ]

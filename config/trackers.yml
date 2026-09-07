@@ -1,18 +1,27 @@
 ---
-# Configuracao declarativa do observatorio.
+# Configuração declarativa do observatório.
 #
-# Nada no codigo conhece "guerra", "crime" ou qualquer figura publica.
+# Nada no código conhece "guerra", "crime" ou qualquer figura pública.
 # Para acrescentar um tema novo basta editar este ficheiro.
 #
 #   topics   -> o tema medido (Infotainment de Guerra, Crime na TV, ...)
-#   subjects -> quem ou o que e contabilizado dentro do tema
-#   sources  -> de onde vem a informacao e como e atribuida
+#   subjects -> quem ou o que é contabilizado dentro do tema
+#   sources  -> de onde vem a informação e como é atribuída
 #
-# Regra de atribuicao (attribution):
+# Regra de atribuição (attribution):
 #   shared_equal -> um bloco de 20 min com 2 intervenientes conta 10 min a cada
 #   each_full    -> o mesmo bloco conta 20 min a cada
-# O site publica as duas leituras. shared_equal e o valor conservador
-# e e o que aparece por omissao.
+# O site publica as duas leituras. shared_equal é o valor conservador
+# e é o que aparece por omissão.
+#
+# Uma fonte com require_broadcast_evidence: true só aceita itens cuja
+# sinopse comprove que foram para o ar (contém "emitido"/"exibido"),
+# não apenas publicados em podcast. Ver collector/attribute.py.
+#
+# Uma fonte cujo feed mistura mais do que um programa usa `segments`
+# para classificar cada item pelo título/duração antes de tudo o resto.
+# A primeira regra que corresponder ganha; uma regra sem match_any é o
+# catch-all e deve vir sempre por último.
 
 version: 1
 
@@ -52,63 +61,73 @@ subjects:
 
 sources:
   # ------------------------------------------------------------------
-  # Feeds de podcast (Omny Studio). Duracao exata por episodio,
-  # sem scraping, com historico completo desde 2022.
+  # Feeds de podcast (Omny Studio). Duração exata por episódio, sem
+  # scraping. O feed ao vivo só expõe os últimos 100 episódios — cada
+  # publicador escolhe esse limite do lado dele, não é ajustável por
+  # quem consome o feed. Para o histórico anterior a isso, ver
+  # collector/backfill_wayback.py.
   # ------------------------------------------------------------------
+
+  # Guerra Fria: rubrica fixa de Milhazes + Rogeiro, sempre os dois.
+  # Foi ao ar às terças no Jornal da Noite até fev/2025; passou depois
+  # para domingo, no mesmo Jornal da Noite.
   - id: omny-guerra-fria
     type: podcast_rss
     enabled: true
     topic: guerra
     url: https://omny.fm/shows/guerra-fria/playlists/podcast.rss
     channel: SIC
-    program: Jornal da Noite
+    program: Guerra Fria
     segment: Guerra Fria
-    # Elenco fixo: todos os episodios contam para ambos.
     roster: [milhazes, rogeiro]
     attribution: shared_equal
     confidence: high
+    require_broadcast_evidence: true
 
-  - id: omny-leste-oeste
+  # O feed "podcast.rss" do programa de Rogeiro é o superconjunto de
+  # TRÊS rubricas distintas (confirmado em omny.fm/shows/.../playlists:
+  # as playlists "jogos-de-poder" e "nuno-rogeiro-convida" são
+  # subconjuntos desta com os MESMOS episódios). Por isso usamos só
+  # esta fonte, uma vez, e classificamos cada item por segmento —
+  # nunca as playlists derivadas, ou os mesmos blocos entrariam
+  # duas vezes.
+  - id: omny-rogeiro-show
     type: podcast_rss
     enabled: true
     topic: guerra
-    url: https://www.omnycontent.com/d/playlist/8c0a4104-a688-4e57-91fd-ad7b00d5dddd/c21f9593-318c-4f18-965a-ad8e00c1c070/e4249a83-8aee-4f34-90b1-ad8e00c1c087/podcast.rss
-    channel: SIC Noticias
+    url: https://omny.fm/shows/expresso-leste-oeste-de-nuno-rogeiro/playlists/podcast.rss
+    channel: SIC Notícias
     program: Leste/Oeste
-    segment: Leste/Oeste
     roster: [rogeiro]
     attribution: shared_equal
     confidence: high
-
-  # Fila de espera: confirmar o slug antes de activar.
-  # Usar `python -m collector.discover <url do programa em omny.fm>`.
-  - id: omny-jogos-de-poder
-    type: podcast_rss
-    enabled: false
-    topic: guerra
-    url: ''
-    channel: SIC
-    program: Jogos de Poder
-    segment: ''
-    roster: [rogeiro]
-    attribution: shared_equal
-    confidence: high
+    require_broadcast_evidence: true
+    segments:
+      - match_any: ['Jogos de Poder']
+        program: Jogos de Poder
+        channel: SIC
+      - match_any: ['Nuno Rogeiro Convida']
+        program: Nuno Rogeiro Convida
+        channel: SIC
+      - match_any: []   # catch-all: sobra para o Leste/Oeste
+        program: Leste/Oeste
+        channel: SIC Notícias
 
   # ------------------------------------------------------------------
-  # YouTube. Apanha as intervencoes avulsas fora das rubricas fixas.
-  # Precisa de YT_API_KEY no ambiente. Sem chave, a fonte e ignorada
-  # em silencio e o resto da recolha corre na mesma.
+  # YouTube. Apanha as intervenções avulsas fora das rubricas fixas.
+  # Precisa de YT_API_KEY no ambiente. Sem chave, a fonte é ignorada
+  # em silêncio e o resto da recolha corre na mesma.
   # ------------------------------------------------------------------
   - id: yt-sicnoticias
     type: youtube
     enabled: false
     topic: guerra
     handle: '@SICNoticias'
-    channel: SIC Noticias
+    channel: SIC Notícias
     program: ''
-    # Sem elenco fixo: os intervenientes sao detectados por match.
+    # Sem elenco fixo: os intervenientes são detetados por match.
     roster: auto
     attribution: shared_equal
     confidence: medium
-    # Filtro previo para nao gastar quota com o catalogo inteiro.
+    # Filtro prévio para não gastar quota com o catálogo inteiro.
     query_terms: [Milhazes, Rogeiro]

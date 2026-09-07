@@ -1,0 +1,53 @@
+name: backfill-historico
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_id:
+        description: 'id da fonte em config/trackers.yml'
+        required: true
+        type: string
+      date_from:
+        description: 'AAAA-MM-DD (vazio = since do tema)'
+        required: false
+        type: string
+      date_to:
+        description: 'AAAA-MM-DD (vazio = hoje)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    env:
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Backfill via Wayback Machine
+        run: |
+          python -m collector.backfill_wayback "${{ inputs.source_id }}" \
+            ${{ inputs.date_from && format('--from {0}', inputs.date_from) || '' }} \
+            ${{ inputs.date_to && format('--to {0}', inputs.date_to) || '' }}
+
+      - name: Publicar alterações
+        run: |
+          if [ -z "$(git status --porcelain docs/data)" ]; then
+            echo "sem alteracoes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data
+          git commit -m "backfill: ${{ inputs.source_id }} via wayback machine"
+          git push

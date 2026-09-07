@@ -13,6 +13,7 @@
   main ol { color: var(--ink-soft); padding-left: 1.2rem; }
   main li { margin-bottom: 0.5rem; }
   main code { font-family: var(--mono); background: var(--panel); padding: 0.1em 0.35em; }
+  main pre { font-family: var(--mono); background: var(--panel); padding: 0.75rem 1rem; overflow-x: auto; font-size: 0.9rem; }
   main table { margin: 1rem 0; }
   main a { color: var(--ink); }
 </style>
@@ -39,11 +40,21 @@
 <p>Cada registo guarda a fonte que o originou e o URL original. Nada entra no dataset sem proveniência.</p>
 <h2>Limitações assumidas</h2>
 <ol>
-<li><strong>Podcast e emissão não são a mesma coisa.</strong> A versão em podcast de uma rubrica pode ser cortada ou ligeiramente mais longa do que o que foi para o ar. A diferença não é conhecida nem é estimada.</li>
+<li><strong>Podcast e emissão não são a mesma coisa.</strong> A versão em podcast de uma rubrica pode ser cortada ou ligeiramente mais longa do que o que foi para o ar. A diferença não é conhecida nem é estimada. Para reduzir este risco, as fontes que misturam conteúdo exclusivo de podcast com emissões de TV exigem prova textual de que o episódio foi para o ar (<code>require_broadcast_evidence</code>); sem essa prova, o episódio fica de fora e é registado na quarentena.</li>
 <li><strong>Cobertura parcial.</strong> Intervenções que o canal não publica em podcast nem em vídeo não são contabilizadas.</li>
 <li><strong>Atribuição de tempo partilhado.</strong> Um bloco com vários intervenientes não permite saber quem falou quanto tempo sem análise de áudio. Ver abaixo.</li>
 <li><strong>Deteção por texto.</strong> Nas fontes sem elenco fixo, o interveniente é detetado pelo título e pela descrição. Um bloco mal titulado pelo emissor não é apanhado.</li>
+<li><strong>O feed ao vivo só cobre os últimos 100 episódios.</strong> É um limite do publicador do feed, não ajustável por quem o consome. Para o histórico mais antigo, ver "Backfill histórico" abaixo.</li>
+<li><strong>Um feed pode conter mais do que uma rubrica.</strong> Quando isso acontece, cada episódio é classificado por regras de título e duração (<code>segments</code>, em <code>config/trackers.yml</code>), nunca por múltiplas fontes a apontar para o mesmo feed — isso duplicaria tempo.</li>
 </ol>
+<h2>Backfill histórico</h2>
+<p>O feed RSS ao vivo de cada programa só devolve os últimos 100 episódios. Para cobrir o período desde o início do tema, sem essa restrição, existe um comando à parte que lê capturas arquivadas do feed no Wayback Machine (web.archive.org) em vários momentos ao longo do tempo, reconstruindo o histórico contínuo a partir da sobreposição dessas janelas:</p>
+<pre>
+python -m collector.backfill_wayback &lt;id-da-fonte&gt;
+</pre>
+<p>Corre uma vez por fonte (ou de vez em quando, para alargar a cobertura), não faz parte da recolha diária, e usa exatamente as mesmas regras de atribuição, classificação e corte de data da recolha normal — nada aqui tem um critério à parte.</p>
+<h2>Deduplicação entre fontes</h2>
+<p>Se, por engano de configuração, duas fontes alguma vez apontarem para o mesmo episódio de origem, apenas a primeira conta — a segunda é posta de lado e registada com o motivo. Isto é verificado numa corrida completa (ver <code>tests/test_classification.py</code>), não é apenas uma intenção de código.</p>
 <h2>Regra de atribuição</h2>
 <p>Um bloco de 20 minutos com dois intervenientes admite duas leituras:</p>
 <p><strong>Tempo rateado</strong> (<code>shared_equal</code>): 10 minutos a cada. É a leitura por omissão, por ser a conservadora.</p>
@@ -51,9 +62,10 @@
 <p>O dataset guarda <code>duration_s</code> e <code>credited_s</code> em campos separados, por isso as duas leituras são sempre reconstruíveis sem nova recolha. O site permite alternar entre elas.</p>
 <h2>Auditoria</h2>
 <p>O dataset completo está em <code>docs/data/appearances.json</code> e é descarregável a partir do próprio site.</p>
+<p>Os episódios rejeitados nesta corrida — antes do início do tema, sem prova de emissão, sem interveniente identificado, ou duplicados entre fontes — ficam em <code>docs/data/quarantine.json</code>, com o motivo. Nada desaparece em silêncio.</p>
 <p>A recolha corre em integração contínua, nunca à mão. O histórico de commits mostra cada alteração.</p>
 <p>As regras de atribuição estão todas num único ficheiro, <code>collector/attribute.py</code>, com menos de cem linhas.</p>
-<p>A configuração de temas e intervenientes está em <code>config/trackers.yml</code>. Nenhuma decisão editorial está escondida no código.</p>
+<p>A configuração de temas, intervenientes e fontes está em <code>config/trackers.yml</code>. Nenhuma decisão editorial está escondida no código.</p>
 <h2>Correções</h2>
 <p>Erros factuais são corrigidos e a correção fica visível no histórico. Registos nunca são apagados em silêncio.</p>
 <h2>Âmbito</h2>
@@ -63,6 +75,7 @@
 <footer class="colofon">
   <div class="colofon-block">
     <p><a href="data/appearances.json" download>Descarregar o dataset completo</a></p>
+    <p><a href="data/quarantine.json" download>Ver itens rejeitados nesta corrida</a></p>
   </div>
 </footer>
 

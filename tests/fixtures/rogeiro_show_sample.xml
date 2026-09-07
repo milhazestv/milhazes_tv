@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Leste/Oeste de Nuno Rogeiro</title>
+    <item>
+      <title>Os ataques no Golfo continuam</title>
+      <guid>rogeiro-jdp-0001</guid>
+      <link>https://example.invalid/jdp1</link>
+      <pubDate>Tue, 02 Sep 2026 22:10:00 +0000</pubDate>
+      <itunes:duration>21:35</itunes:duration>
+      <description>Nuno Rogeiro analisa os ataques no Golfo. Ouça o Jogos de Poder na versão podcast do programa emitido no Jornal da Noite de 1 de setembro.</description>
+    </item>
+    <item>
+      <title>Nuno Rogeiro Convida Carlos Moedas</title>
+      <guid>rogeiro-convida-0001</guid>
+      <link>https://example.invalid/convida1</link>
+      <pubDate>Wed, 03 Sep 2026 12:00:00 +0000</pubDate>
+      <itunes:duration>28:37</itunes:duration>
+      <description>Nuno Rogeiro Convida Carlos Moedas para debater economia. Emitido na SIC a 2 de setembro.</description>
+    </item>
+    <item>
+      <title>Radcliffe em Moscovo</title>
+      <guid>rogeiro-leste-oeste-0001</guid>
+      <link>https://example.invalid/le1</link>
+      <pubDate>Sun, 07 Sep 2026 14:00:00 +0000</pubDate>
+      <itunes:duration>1:40:16</itunes:duration>
+      <description>O programa Leste Oeste desta semana foi dominado pela situação na Ucrânia. Ouça aqui o programa Leste Oeste em podcast, emitido na SIC Notícias a 7 de setembro.</description>
+    </item>
+    <item>
+      <title>Episódio antigo, sem prova de emissão</title>
+      <guid>rogeiro-sem-evidencia-0001</guid>
+      <link>https://example.invalid/se1</link>
+      <pubDate>Sun, 06 Sep 2026 14:00:00 +0000</pubDate>
+      <itunes:duration>1500</itunes:duration>
+      <description>Uma sinopse gerada sem qualquer confirmação de que foi para o ar.</description>
+    </item>
+    <item>
+      <title>Episódio anterior ao início do tema</title>
+      <guid>rogeiro-antigo-0001</guid>
+      <link>https://example.invalid/antigo1</link>
+      <pubDate>Mon, 03 Jan 2022 14:00:00 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <description>Emitido na SIC Notícias a 3 de janeiro de 2022, antes da invasão.</description>
+    </item>
+  </channel>
+</rss>

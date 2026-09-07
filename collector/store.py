@@ -14,6 +14,7 @@ from pathlib import Path
 from .models import Appearance, DATA_DIR
 
 APPEARANCES = DATA_DIR / "appearances.json"
+QUARANTINE = DATA_DIR / "quarantine.json"
 
 
 def load(path: Path = APPEARANCES) -> dict[str, dict]:
@@ -45,6 +46,22 @@ def save(rows: dict[str, dict], path: Path = APPEARANCES) -> None:
     ordered = sorted(rows.values(), key=lambda r: (r["date"], r["id"]))
     payload = {"schema": 1, "count": len(ordered), "appearances": ordered}
     # sort_keys e indent fixos para que o diff do git seja legivel.
+    path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def save_quarantine(entries: list[dict], path: Path = QUARANTINE) -> None:
+    """Itens rejeitados pela recolha, com o motivo. Nada desaparece em
+    silêncio — quem quiser auditar as exclusões tem aqui a lista completa
+    desta corrida."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema": 1,
+        "count": len(entries),
+        "entries": sorted(entries, key=lambda e: (e["source"], e["date"])),
+    }
     path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
         encoding="utf-8",
