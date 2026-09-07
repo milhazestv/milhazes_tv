@@ -44,14 +44,55 @@ Corre uma vez por fonte (ou de vez em quando, para alargar a cobertura), não fa
 
 Se, por engano de configuração, duas fontes alguma vez apontarem para o mesmo episódio de origem, apenas a primeira conta — a segunda é posta de lado e registada com o motivo. Isto é verificado numa corrida completa (ver `tests/test_classification.py`), não é apenas uma intenção de código.
 
-## Regra de atribuição
+## Definição formal
 
-Um bloco de 20 minutos com dois intervenientes admite duas leituras:
+Esta secção é deliberadamente técnica — é a única página do site onde isso acontece. As restantes páginas usam linguagem corrente; aqui, a precisão importa mais do que a fluidez de leitura.
 
-- **Tempo rateado** (`shared_equal`): 10 minutos a cada. É a leitura por omissão, por ser a conservadora.
-- **Bloco integral** (`each_full`): 20 minutos a cada. Mede presença em antena, não tempo de fala.
+**Bloco.** Um bloco `B` é um evento de emissão identificado, com três propriedades: uma duração `D(B)` em segundos, uma data `t(B)`, e um conjunto de intervenientes identificados `P(B) = {p₁, ..., pₙ}`, com `n = |P(B)| ≥ 1`.
 
-O dataset guarda `duration_s` e `credited_s` em campos separados, por isso as duas leituras são sempre reconstruíveis sem nova recolha. O site permite alternar entre elas.
+### Tempo atribuído a um interveniente, por bloco
+
+Para um interveniente `p ∈ P(B)`, definem-se exatamente duas funções de atribuição:
+
+```
+leitura dividida  (shared_equal):  c_dividido(p, B) = D(B) / |P(B)|
+leitura completa  (each_full):     c_completo(p, B) = D(B)
+```
+
+No site, estas duas leituras aparecem com os nomes "Tempo dividido" e "Tempo completo". São as únicas duas publicadas, por uma razão precisa: são as únicas duas que não exigem dados que este projeto não tem. Qualquer valor intermédio (por exemplo, "60/40 porque um fala mais") exigiria transcrição e diarização de áudio — identificar quem fala, ao segundo, dentro de cada bloco — o que este projeto explicitamente não faz (ver Limitações). Sem esses dados, qualquer fração que não seja `1/n` ou `1` seria uma estimativa disfarçada de medição. Por isso ambas as leituras aqui publicadas são exatas, não aproximadas: cada uma é uma soma direta de números guardados, nunca um palpite.
+
+### Tempo total de um tema, num período
+
+O erro mais fácil de cometer nesta conta é somar o tempo de todos os intervenientes de um bloco partilhado — o que daria a um bloco de 20 minutos com dois intervenientes um total de 40 minutos de emissão. Isso seria falso: só houve 20 minutos de televisão. Por isso, o tempo total de emissão de um tema `T`, entre as datas `t0` e `t1`, soma-se sobre o **conjunto de blocos distintos** desse período — nunca sobre as linhas atribuídas a cada interveniente:
+
+```
+Emissão(T, t0, t1) = Σ D(B), para todo B com t(B) ∈ [t0, t1]
+```
+
+Cada bloco entra nesta soma exatamente uma vez, seja qual for o número de intervenientes.
+
+### Tempo de um interveniente, num período
+
+```
+Tempo(p, t0, t1) = Σ c(p, B), para todo B com t(B) ∈ [t0, t1] e p ∈ P(B)
+```
+
+onde `c` é `c_dividido` ou `c_completo`, consoante a leitura escolhida no site.
+
+### Períodos usados no site
+
+| Período | t0 | t1 |
+|---|---|---|
+| Esta semana | segunda-feira da semana corrente | hoje |
+| Este mês | dia 1 do mês corrente | hoje |
+| Este ano | 1 de janeiro do ano corrente | hoje |
+| Desde a guerra | data de início do tema (2022-02-24) | hoje |
+
+Todos os quatro usam exatamente as fórmulas acima. Nenhum período tem uma regra de cálculo diferente dos outros — só o intervalo `[t0, t1]` muda.
+
+### Nota sobre arredondamento
+
+Os valores diários guardados em `docs/data/stats.json` são arredondados ao segundo antes de serem escritos. Somar `k` dias já arredondados pode divergir do total exato do período em, no máximo, `k` segundos — por acumulação do erro de arredondamento, nunca por um enviesamento sistemático (arredonda-se sempre ao valor mais próximo, nunca sempre para cima ou sempre para baixo). Numa escala de horas, este desvio é irrelevante: mesmo no pior caso, um período de 30 dias diverge no máximo 30 segundos, ou seja, menos de 0,003% de um total de 30 horas. Este limite está verificado em `tests/test_pipeline.py`, não é apenas uma alegação.
 
 ## Auditoria
 

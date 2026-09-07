@@ -7,14 +7,17 @@
 <meta name="robots" content="index, follow">
 <link rel="stylesheet" href="style.css">
 <style>
-  main { max-width: 42rem; }
-  main h2 { border: 0; font-size: 1.1rem; margin-top: 2rem; }
+  main { max-width: 44rem; }
+  main h2 { border: 0; font-size: 1.15rem; margin-top: 2.25rem; }
+  main h3 { font-size: 0.98rem; margin-top: 1.5rem; color: var(--ink); }
   main p { margin: 0 0 0.9rem; color: var(--ink-soft); }
   main ol { color: var(--ink-soft); padding-left: 1.2rem; }
   main li { margin-bottom: 0.5rem; }
   main code { font-family: var(--mono); background: var(--panel); padding: 0.1em 0.35em; }
-  main pre { font-family: var(--mono); background: var(--panel); padding: 0.75rem 1rem; overflow-x: auto; font-size: 0.9rem; }
-  main table { margin: 1rem 0; }
+  main pre { font-family: var(--mono); background: var(--panel); padding: 0.9rem 1rem; overflow-x: auto; font-size: 0.88rem; line-height: 1.6; }
+  main table { margin: 1rem 0; width: 100%; border-collapse: collapse; }
+  main th, main td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--rule); font-size: 0.92rem; }
+  main th { color: var(--ink); font-weight: 600; }
   main a { color: var(--ink); }
 </style>
 </head>
@@ -55,11 +58,37 @@ python -m collector.backfill_wayback &lt;id-da-fonte&gt;
 <p>Corre uma vez por fonte (ou de vez em quando, para alargar a cobertura), não faz parte da recolha diária, e usa exatamente as mesmas regras de atribuição, classificação e corte de data da recolha normal — nada aqui tem um critério à parte.</p>
 <h2>Deduplicação entre fontes</h2>
 <p>Se, por engano de configuração, duas fontes alguma vez apontarem para o mesmo episódio de origem, apenas a primeira conta — a segunda é posta de lado e registada com o motivo. Isto é verificado numa corrida completa (ver <code>tests/test_classification.py</code>), não é apenas uma intenção de código.</p>
-<h2>Regra de atribuição</h2>
-<p>Um bloco de 20 minutos com dois intervenientes admite duas leituras:</p>
-<p><strong>Tempo rateado</strong> (<code>shared_equal</code>): 10 minutos a cada. É a leitura por omissão, por ser a conservadora.</p>
-<p><strong>Bloco integral</strong> (<code>each_full</code>): 20 minutos a cada. Mede presença em antena, não tempo de fala.</p>
-<p>O dataset guarda <code>duration_s</code> e <code>credited_s</code> em campos separados, por isso as duas leituras são sempre reconstruíveis sem nova recolha. O site permite alternar entre elas.</p>
+<h2>Definição formal</h2>
+<p>Esta secção é deliberadamente técnica — é a única página do site onde isso acontece. As restantes páginas usam linguagem corrente; aqui, a precisão importa mais do que a fluidez de leitura.</p>
+<p><strong>Bloco.</strong> Um bloco <code>B</code> é um evento de emissão identificado, com três propriedades: uma duração <code>D(B)</code> em segundos, uma data <code>t(B)</code>, e um conjunto de intervenientes identificados <code>P(B) = {p₁, ..., pₙ}</code>, com <code>n = |P(B)| ≥ 1</code>.</p>
+<h3>Tempo atribuído a um interveniente, por bloco</h3>
+<p>Para um interveniente <code>p ∈ P(B)</code>, definem-se exatamente duas funções de atribuição:</p>
+<pre>
+leitura dividida  (shared_equal):  c_dividido(p, B) = D(B) / |P(B)|
+leitura completa  (each_full):     c_completo(p, B) = D(B)
+</pre>
+<p>No site, estas duas leituras aparecem com os nomes "Tempo dividido" e "Tempo completo". São as únicas duas publicadas, por uma razão precisa: são as únicas duas que não exigem dados que este projeto não tem. Qualquer valor intermédio (por exemplo, "60/40 porque um fala mais") exigiria transcrição e diarização de áudio — identificar quem fala, ao segundo, dentro de cada bloco — o que este projeto explicitamente não faz (ver Limitações). Sem esses dados, qualquer fração que não seja <code>1/n</code> ou <code>1</code> seria uma estimativa disfarçada de medição. Por isso ambas as leituras aqui publicadas são exatas, não aproximadas: cada uma é uma soma direta de números guardados, nunca um palpite.</p>
+<h3>Tempo total de um tema, num período</h3>
+<p>O erro mais fácil de cometer nesta conta é somar o tempo de todos os intervenientes de um bloco partilhado — o que daria a um bloco de 20 minutos com dois intervenientes um total de 40 minutos de emissão. Isso seria falso: só houve 20 minutos de televisão. Por isso, o tempo total de emissão de um tema <code>T</code>, entre as datas <code>t0</code> e <code>t1</code>, soma-se sobre o <strong>conjunto de blocos distintos</strong> desse período — nunca sobre as linhas atribuídas a cada interveniente:</p>
+<pre>
+Emissão(T, t0, t1) = Σ D(B), para todo B com t(B) ∈ [t0, t1]
+</pre>
+<p>Cada bloco entra nesta soma exatamente uma vez, seja qual for o número de intervenientes.</p>
+<h3>Tempo de um interveniente, num período</h3>
+<pre>
+Tempo(p, t0, t1) = Σ c(p, B), para todo B com t(B) ∈ [t0, t1] e p ∈ P(B)
+</pre>
+<p>onde <code>c</code> é <code>c_dividido</code> ou <code>c_completo</code>, consoante a leitura escolhida no site.</p>
+<h3>Períodos usados no site</h3>
+<table><thead><tr><th>Período</th><th>t0</th><th>t1</th></tr></thead><tbody>
+<tr><td>Esta semana</td><td>segunda-feira da semana corrente</td><td>hoje</td></tr>
+<tr><td>Este mês</td><td>dia 1 do mês corrente</td><td>hoje</td></tr>
+<tr><td>Este ano</td><td>1 de janeiro do ano corrente</td><td>hoje</td></tr>
+<tr><td>Desde a guerra</td><td>data de início do tema (2022-02-24)</td><td>hoje</td></tr>
+</tbody></table>
+<p>Todos os quatro usam exatamente as fórmulas acima. Nenhum período tem uma regra de cálculo diferente dos outros — só o intervalo <code>[t0, t1]</code> muda.</p>
+<h3>Nota sobre arredondamento</h3>
+<p>Os valores diários guardados em <code>docs/data/stats.json</code> são arredondados ao segundo antes de serem escritos. Somar <code>k</code> dias já arredondados pode divergir do total exato do período em, no máximo, <code>k</code> segundos — por acumulação do erro de arredondamento, nunca por um enviesamento sistemático (arredonda-se sempre ao valor mais próximo, nunca sempre para cima ou sempre para baixo). Numa escala de horas, este desvio é irrelevante: mesmo no pior caso, um período de 30 dias diverge no máximo 30 segundos, ou seja, menos de 0,003% de um total de 30 horas. Este limite está verificado em <code>tests/test_pipeline.py</code>, não é apenas uma alegação.</p>
 <h2>Auditoria</h2>
 <p>O dataset completo está em <code>docs/data/appearances.json</code> e é descarregável a partir do próprio site.</p>
 <p>Os episódios rejeitados nesta corrida — antes do início do tema, sem prova de emissão, sem interveniente identificado, ou duplicados entre fontes — ficam em <code>docs/data/quarantine.json</code>, com o motivo. Nada desaparece em silêncio.</p>
@@ -74,8 +103,8 @@ python -m collector.backfill_wayback &lt;id-da-fonte&gt;
 
 <footer class="colofon">
   <div class="colofon-block">
-    <p><a href="data/appearances.json" download>Descarregar o dataset completo</a></p>
-    <p><a href="data/quarantine.json" download>Ver itens rejeitados nesta corrida</a></p>
+    <p><a href="data/appearances.json" download>Descarregar todos os dados</a></p>
+    <p><a href="data/quarantine.json" download>Ver o que ficou de fora</a></p>
   </div>
 </footer>
 

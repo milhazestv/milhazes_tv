@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Milhazes TV</title>
-<meta name="description" content="Contagem pública e auditável do tempo de emissão dedicado a temas recorrentes na televisão portuguesa.">
+<meta name="description" content="Quanto tempo estas rubricas ocupam na televisão portuguesa — dados públicos, recolhidos de forma automática.">
 <meta name="robots" content="index, follow">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -12,7 +12,7 @@
 
 <header class="masthead">
   <h1>Milhazes TV</h1>
-  <p class="standfirst">Contagem do tempo de emissão dedicado a temas recorrentes na televisão portuguesa. Recolha automática, dataset público, sem opinião.</p>
+  <p class="standfirst">Quanto tempo estas rubricas ocupam na televisão portuguesa. Os dados são recolhidos de forma automática, são públicos, e não incluem opinião.</p>
 </header>
 
 <nav class="topics" id="topics" aria-label="Temas"></nav>
@@ -24,12 +24,13 @@
 <footer class="colofon">
   <div class="colofon-block">
     <h2>Como é medido</h2>
-    <p>Cada registo corresponde a um bloco emitido com data e duração publicadas pelo próprio canal. Nada é estimado a olho.</p>
-    <p>Quando um bloco tem mais do que um interveniente, a leitura por omissão divide o tempo em partes iguais. A leitura integral atribui o bloco inteiro a cada um. As duas estão no dataset.</p>
+    <p>Cada vez que o programa vai para o ar, registamos a data e a duração exatas, tal como o próprio canal publica. Nunca adivinhamos números.</p>
+    <p>Quando duas pessoas aparecem juntas, há duas formas de contar esse tempo — dividido ou completo — e pode escolher-se entre elas nos gráficos. As duas ficam sempre guardadas nos dados.</p>
   </div>
   <div class="colofon-block">
     <h2>Verificar</h2>
-    <p><a href="data/appearances.json" download>Descarregar o dataset completo</a></p>
+    <p><a href="data/appearances.json" download>Descarregar todos os dados</a></p>
+    <p><a href="data/quarantine.json" download>Ver o que ficou de fora</a></p>
     <p><a href="methodology.html">Metodologia e limitações</a></p>
     <p id="generated"></p>
   </div>

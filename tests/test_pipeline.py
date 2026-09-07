@@ -189,6 +189,33 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(topic["by_month"][0]["airtime_s"], 6399)
         self.assertEqual(topic["by_program"][0]["program"], "Programa")
 
+    def test_subject_by_day_lets_client_sum_any_period(self):
+        topic = self._stats()
+        by_date = {d["date"]: d["subjects"] for d in topic["subject_by_day"]}
+        self.assertIn("2026-09-02", by_date)
+        first_day = by_date["2026-09-02"]
+        self.assertIn("a", first_day)
+        self.assertIn("b", first_day)
+        self.assertEqual(first_day["a"]["shared_equal"], 564)
+        self.assertEqual(first_day["a"]["blocks"], 1)
+        # cada dia é arredondado à parte, por isso somar os dias pode
+        # divergir do total all-time em ±1s por dia com dados — é o
+        # mesmo comportamento descrito na Metodologia, não um erro.
+        total_a = sum(d["subjects"].get("a", {}).get("shared_equal", 0)
+                      for d in topic["subject_by_day"])
+        self.assertAlmostEqual(
+            total_a, topic["subjects"][0]["totals"]["shared_equal"], delta=3
+        )
+
+    def test_program_by_day_is_clock_time_not_summed_across_subjects(self):
+        topic = self._stats()
+        by_date = {d["date"]: d["programs"] for d in topic["program_by_day"]}
+        first_day = by_date["2026-09-02"]
+        # o bloco de 2026-09-02 tem os dois intervenientes (a e b) mas
+        # é um único bloco de "Programa" — airtime não duplica.
+        self.assertEqual(first_day["Programa"]["airtime_s"], 1129)
+        self.assertEqual(first_day["Programa"]["blocks"], 1)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

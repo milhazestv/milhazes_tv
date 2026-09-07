@@ -69,18 +69,32 @@ def build(rows: list[dict], config: Config) -> dict:
         per_program: dict = defaultdict(_blocks)
         per_subject: dict = defaultdict(_empty_subject)
 
+        # Repartições por dia — o que permite ao site somar qualquer
+        # período (semana, mês, ano, desde sempre) sem nova agregação.
+        subject_by_day: dict = defaultdict(lambda: defaultdict(_empty_subject))
+        program_by_day: dict = defaultdict(lambda: defaultdict(_blocks))
+
         for row in topic_rows:
             key = _key(row)
+            date = row["date"]
             duration = row["duration_s"]
+            program = row["program"] or row["channel"]
+
             total[key] = duration
-            per_day[row["date"]][key] = duration
-            per_month[row["date"][:7]][key] = duration
-            per_program[row["program"] or row["channel"]][key] = duration
+            per_day[date][key] = duration
+            per_month[date[:7]][key] = duration
+            per_program[program][key] = duration
+            program_by_day[date][program][key] = duration
 
             bucket = per_subject[row["subject"]]
             bucket["shared_equal"] += row["credited_s"]
             bucket["each_full"] += duration
             bucket["blocks"].add(key)
+
+            day_bucket = subject_by_day[date][row["subject"]]
+            day_bucket["shared_equal"] += row["credited_s"]
+            day_bucket["each_full"] += duration
+            day_bucket["blocks"].add(key)
 
         dates = sorted(per_day)
 
@@ -117,6 +131,26 @@ def build(rows: list[dict], config: Config) -> dict:
                     key=lambda entry: entry["airtime_s"],
                     reverse=True,
                 ),
+                "subject_by_day": [
+                    {
+                        "date": day,
+                        "subjects": {
+                            sid: _round_subject(bucket)
+                            for sid, bucket in subject_by_day[day].items()
+                        },
+                    }
+                    for day in dates
+                ],
+                "program_by_day": [
+                    {
+                        "date": day,
+                        "programs": {
+                            program: _airtime(bucket)
+                            for program, bucket in program_by_day[day].items()
+                        },
+                    }
+                    for day in dates
+                ],
                 "sources": sorted({row["source"] for row in topic_rows}),
             }
         )

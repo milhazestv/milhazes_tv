@@ -1,24 +1,29 @@
 /* Renderiza docs/data/stats.json. Sem dependências, sem pedidos a terceiros.
    O site não calcula nada de opinativo: os totais vêm todos do ficheiro
    versionado, para que qualquer número seja contestável contra um commit
-   concreto. As únicas contas feitas aqui são somas de períodos, a partir
-   de by_day, que já vem agregado no stats.json. */
+   concreto. As únicas contas feitas aqui são somas de um período (semana,
+   mês, ano, ou desde o início) a partir das repartições diárias que já
+   vêm prontas no stats.json — nenhuma agregação nova é inventada no
+   browser. */
 
 (function () {
   "use strict";
 
-  var BAR_COLOURS = ["var(--bar-1)", "var(--bar-2)", "var(--bar-3)", "var(--bar-4)"];
+  var CORES = ["var(--bar-1)", "var(--bar-2)", "var(--bar-3)", "var(--bar-4)", "var(--bar-5)"];
   var MESES = [
     "janeiro", "fevereiro", "março", "abril", "maio", "junho",
     "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
   ];
+
+  // period.id -> { tab: texto curto no botão, frase: texto médio da frase }
   var PERIODOS = [
-    { id: "day", label: "Hoje" },
-    { id: "week", label: "Esta semana" },
-    { id: "month", label: "Este mês" }
+    { id: "week", tab: "Esta semana", frase: "esta semana" },
+    { id: "month", tab: "Este mês", frase: "este mês" },
+    { id: "year", tab: "Este ano", frase: "este ano" },
+    { id: "all", tab: "Desde a guerra", frase: "desde o início da guerra Ucrânia-Rússia" }
   ];
 
-  var state = { stats: null, topic: null, reading: "shared_equal", period: "week" };
+  var state = { stats: null, topic: null, reading: "shared_equal", period: "month" };
 
   function pad(n) { return n < 10 ? "0" + n : String(n); }
 
@@ -81,38 +86,123 @@
     return state.stats.topics.filter(function (t) { return t.id === state.topic; })[0];
   }
 
-  /* Soma os dias de by_day que caem dentro do período escolhido.
-     "Hoje" e "esta semana" usam a data local de quem visita o site;
-     é uma aproximação aceitável para este fim, não um relógio de emissão. */
-  function periodTotals(topic, period) {
+  /* Intervalo [de, até] do período escolhido, em datas ISO, mais o texto
+     que aparece por baixo do número grande. */
+  function periodRange(topic, periodId) {
     var today = new Date();
-    var from, to = today, label;
+    var from;
 
-    if (period === "day") {
-      from = today;
-      label = "hoje, " + formatDatePT(today);
-    } else if (period === "month") {
-      from = new Date(today.getFullYear(), today.getMonth(), 1);
-      label = "em " + MESES[today.getMonth()];
-    } else {
+    if (periodId === "week") {
       from = startOfWeek(today);
-      label = "de " + formatDatePT(from) + " a " + formatDatePT(to);
+    } else if (periodId === "year") {
+      from = new Date(today.getFullYear(), 0, 1);
+    } else if (periodId === "all") {
+      var parts = (topic.since || "2022-02-24").split("-").map(Number);
+      from = new Date(parts[0], parts[1] - 1, parts[2]);
+    } else {
+      from = new Date(today.getFullYear(), today.getMonth(), 1);
     }
 
-    var fromIso = isoDate(from);
-    var toIso = isoDate(to);
+    return { fromIso: isoDate(from), toIso: isoDate(today), fromDate: from, toDate: today };
+  }
+
+  function sumRange(byDay, fromIso, toIso, field) {
     var seconds = 0;
     var blocks = 0;
+    byDay.forEach(function (day) {
+      if (day.date < fromIso || day.date > toIso) { return; }
+      seconds += day[field];
+      blocks += day.blocks;
+    });
+    return { seconds: seconds, blocks: blocks };
+  }
 
-    topic.by_day.forEach(function (day) {
-      if (day.date >= fromIso && day.date <= toIso) {
-        seconds += day.airtime_s;
-        blocks += day.blocks;
-      }
+  function sumSubjectsInRange(topic, fromIso, toIso, reading) {
+    var totals = {};
+    (topic.subject_by_day || []).forEach(function (day) {
+      if (day.date < fromIso || day.date > toIso) { return; }
+      Object.keys(day.subjects).forEach(function (sid) {
+        totals[sid] = (totals[sid] || 0) + day.subjects[sid][reading];
+      });
+    });
+    return totals;
+  }
+
+  function sumProgramsInRange(topic, fromIso, toIso) {
+    var totals = {};
+    (topic.program_by_day || []).forEach(function (day) {
+      if (day.date < fromIso || day.date > toIso) { return; }
+      Object.keys(day.programs).forEach(function (prog) {
+        totals[prog] = (totals[prog] || 0) + day.programs[prog].airtime_s;
+      });
+    });
+    return totals;
+  }
+
+  // ---- gráfico circular, em SVG puro -------------------------------
+
+  function polarToCartesian(cx, cy, r, angleDeg) {
+    var rad = (angleDeg * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+
+  function arcPath(cx, cy, r, startAngle, endAngle) {
+    var start = polarToCartesian(cx, cy, r, startAngle);
+    var end = polarToCartesian(cx, cy, r, endAngle);
+    var largeArc = endAngle - startAngle > 180 ? 1 : 0;
+    return [
+      "M", cx, cy,
+      "L", start.x.toFixed(2), start.y.toFixed(2),
+      "A", r, r, 0, largeArc, 1, end.x.toFixed(2), end.y.toFixed(2),
+      "Z"
+    ].join(" ");
+  }
+
+  /* entries: [{label, seconds, blocks}], já sem os de valor zero.
+     Devolve null se não houver nada para mostrar. */
+  function renderPie(entries, opts) {
+    var total = entries.reduce(function (sum, e) { return sum + e.seconds; }, 0);
+    if (total <= 0) { return null; }
+
+    var size = 200;
+    var cx = size / 2, cy = size / 2, r = 90;
+    var svg = '<svg class="pie" viewBox="0 0 ' + size + " " + size +
+      '" role="img" aria-label="' + (opts.ariaLabel || "Gráfico circular") + '">';
+
+    if (entries.length === 1) {
+      svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + CORES[0] + '"></circle>';
+    } else {
+      var angle = -90;
+      entries.forEach(function (e, i) {
+        var sliceAngle = (e.seconds / total) * 360;
+        var path = arcPath(cx, cy, r, angle, angle + sliceAngle);
+        svg += '<path d="' + path + '" fill="' + CORES[i % CORES.length] + '">' +
+          "<title>" + e.label + ": " + humanDuration(e.seconds) + "</title></path>";
+        angle += sliceAngle;
+      });
+    }
+    svg += "</svg>";
+
+    var legend = el("ul", { class: "pie-legend" });
+    entries.forEach(function (e, i) {
+      var pct = Math.round((e.seconds / total) * 100);
+      var dot = el("span", { class: "pie-dot" });
+      dot.style.background = CORES[i % CORES.length];
+      legend.appendChild(el("li", {}, [
+        dot,
+        el("span", { class: "pie-legend-label", text: e.label }),
+        el("span", { class: "pie-legend-value", text: pct + "% · " + humanDuration(e.seconds) })
+      ]));
     });
 
-    return { seconds: seconds, blocks: blocks, label: label };
+    var wrap = el("div", { class: "pie-wrap" }, [
+      el("div", { class: "pie-svg", html: svg }),
+      legend
+    ]);
+    return wrap;
   }
+
+  // ---- secções da página --------------------------------------------
 
   function renderTabs() {
     var nav = document.getElementById("topics");
@@ -136,17 +226,12 @@
 
   function renderEmpty(panel, topic) {
     panel.appendChild(el("div", { class: "empty" }, [
-      el("h2", { text: "Ainda sem registos" }),
-      el("p", { text: "Não há blocos recolhidos para " + topic.name + "." })
+      el("h2", { text: "Ainda sem dados" }),
+      el("p", { text: "Ainda não há nada registado para " + topic.name + "." })
     ]));
   }
 
-  /* Cabeçalho: o número do período escolhido, não o total acumulado.
-     "Esta semana já tivemos 3 horas de Infotainment de Guerra na TV." */
-  function renderHero(panel, topic) {
-    var period = periodTotals(topic, state.period);
-    var periodoAtivo = PERIODOS.filter(function (p) { return p.id === state.period; })[0];
-
+  function renderPeriodSelector(panel) {
     var selector = el("div", { class: "period-selector", role: "tablist", "aria-label": "Período" });
     PERIODOS.forEach(function (p) {
       var button = el("button", {
@@ -154,7 +239,7 @@
         type: "button",
         role: "tab",
         "aria-selected": String(p.id === state.period),
-        text: p.label
+        text: p.tab
       });
       button.addEventListener("click", function () {
         state.period = p.id;
@@ -163,41 +248,66 @@
       selector.appendChild(button);
     });
     panel.appendChild(selector);
+  }
 
-    var frase = period.seconds > 0
-      ? capitalize(periodoAtivo.label.toLowerCase()) + " já tivemos"
-      : capitalize(periodoAtivo.label.toLowerCase()) + " ainda não houve";
+  /* Frase grande: "Este mês já tivemos 4 horas e 22 minutos de
+     Infotainment de Guerra na TV." — o número muda com o período
+     escolhido, nunca é o total acumulado disfarçado de outra coisa. */
+  function renderHero(panel, topic, range) {
+    var periodo = PERIODOS.filter(function (p) { return p.id === state.period; })[0];
+    var totals = sumRange(topic.by_day, range.fromIso, range.toIso, "airtime_s");
+
+    var frase = totals.seconds > 0
+      ? capitalize(periodo.frase) + " já tivemos"
+      : capitalize(periodo.frase) + " ainda não houve";
 
     panel.appendChild(el("p", { class: "hero-lead", text: frase }));
     panel.appendChild(el("p", {
       class: "hero-figure",
-      text: period.seconds > 0 ? humanDuration(period.seconds) : "registos"
+      text: totals.seconds > 0 ? humanDuration(totals.seconds) : "nada registado"
     }));
     panel.appendChild(el("p", { class: "hero-tail", text: "de " + topic.name + " na TV." }));
-    panel.appendChild(el("p", {
-      class: "hero-caption",
-      text: (period.blocks === 1 ? "1 bloco" : period.blocks + " blocos") + " " + period.label + "."
-    }));
 
-    panel.appendChild(el("p", {
-      class: "hero-cumulative",
-      text: "Desde " + topic.since + ", o total acumulado é de " + timecode(topic.totals.airtime_s) +
-            " em " + topic.totals.blocks + " blocos — o equivalente a " + days(topic.totals.airtime_s) +
-            " dias de emissão contínua."
-    }));
+    if (totals.seconds > 0) {
+      var vezes = totals.blocks === 1 ? "1 vez" : totals.blocks + " vezes";
+      panel.appendChild(el("p", {
+        class: "hero-caption",
+        text: "Foi para o ar " + vezes + " " + periodo.frase + "."
+      }));
+    }
+
+    return totals;
   }
 
-  function renderSubjects(panel, topic) {
+  function renderProgramPie(panel, topic, range) {
+    var totals = sumProgramsInRange(topic, range.fromIso, range.toIso);
+    var entries = Object.keys(totals)
+      .map(function (program) { return { label: program, seconds: totals[program] }; })
+      .filter(function (e) { return e.seconds > 0; })
+      .sort(function (a, b) { return b.seconds - a.seconds; });
+
+    var periodo = PERIODOS.filter(function (p) { return p.id === state.period; })[0];
+    var section = el("section", {}, [
+      el("h2", { text: "Em que programas apareceu" }),
+      el("p", { class: "section-caption", text: "Como se reparte o tempo " + periodo.frase + "." })
+    ]);
+
+    var pie = renderPie(entries, { ariaLabel: "Tempo por programa" });
+    if (pie) {
+      section.appendChild(pie);
+    } else {
+      section.appendChild(el("p", { class: "section-caption", text: "Sem dados para este período." }));
+    }
+    panel.appendChild(section);
+  }
+
+  function renderSubjectPie(panel, topic, range) {
     if (!topic.subjects.length) { return; }
 
-    var max = Math.max.apply(null, topic.subjects.map(function (s) {
-      return s.totals[state.reading];
-    }).concat([1]));
+    var section = el("section", {}, [el("h2", { text: "Quem fala mais tempo" })]);
 
-    var section = el("section", {}, [el("h2", { text: "Por interveniente" })]);
-
-    var readings = el("div", { class: "readings" }, [el("span", { text: "Leitura:" })]);
-    [["shared_equal", "Tempo rateado"], ["each_full", "Bloco integral"]].forEach(function (pair) {
+    var readings = el("div", { class: "readings" }, [el("span", { text: "Como contar:" })]);
+    [["shared_equal", "Tempo dividido"], ["each_full", "Tempo completo"]].forEach(function (pair) {
       var button = el("button", {
         class: "reading-btn",
         type: "button",
@@ -211,91 +321,62 @@
       readings.appendChild(button);
     });
     section.appendChild(readings);
-
     section.appendChild(el("p", {
-      class: "subject-meta",
+      class: "section-caption",
       text: state.reading === "shared_equal"
-        ? "Um bloco partilhado é dividido em partes iguais pelos intervenientes."
-        : "Cada bloco conta por inteiro para cada interveniente presente."
+        ? "Quando os dois aparecem juntos, o tempo é dividido a meio entre eles."
+        : "Quando os dois aparecem juntos, cada um fica com o tempo todo do bloco."
     }));
 
-    topic.subjects.forEach(function (subject, index) {
-      var value = subject.totals[state.reading];
-      var fill = el("span", { class: "subject-fill" });
-      fill.style.width = (value / max * 100) + "%";
-      fill.style.background = BAR_COLOURS[index % BAR_COLOURS.length];
+    var totals = sumSubjectsInRange(topic, range.fromIso, range.toIso, state.reading);
+    var entries = topic.subjects
+      .map(function (subject) {
+        return { label: subject.name, seconds: totals[subject.id] || 0 };
+      })
+      .filter(function (e) { return e.seconds > 0; })
+      .sort(function (a, b) { return b.seconds - a.seconds; });
 
-      section.appendChild(el("div", { class: "subject" }, [
-        el("div", { class: "subject-head" }, [
-          el("span", { class: "subject-name", text: subject.name }),
-          el("span", { class: "subject-time", text: timecode(value) })
-        ]),
-        el("div", { class: "subject-track" }, [fill]),
-        el("p", { class: "subject-meta", text: subject.totals.blocks + " blocos" })
-      ]));
-    });
-
+    var pie = renderPie(entries, { ariaLabel: "Tempo por pessoa" });
+    if (pie) {
+      section.appendChild(pie);
+    } else {
+      section.appendChild(el("p", { class: "section-caption", text: "Sem dados para este período." }));
+    }
     panel.appendChild(section);
   }
 
-  function renderMonthly(panel, topic) {
+  /* Não é filtrado pelo período escolhido — mostra sempre a evolução
+     completa, porque a pergunta aqui é outra: está a crescer? */
+  function renderEvolucao(panel, topic) {
     if (!topic.by_month.length) { return; }
 
     var months = topic.by_month;
     var max = Math.max.apply(null, months.map(function (m) { return m.airtime_s; }));
-    var width = 1000;
-    var height = 260;
-    var padBottom = 26;
+    var width = 1000, height = 220, padBottom = 26;
     var slot = width / months.length;
 
-    var svg = '<svg class="chart" viewBox="0 0 ' + width + ' ' + height +
-      '" role="img" aria-label="Tempo de emissão por mês">';
+    var svg = '<svg class="chart" viewBox="0 0 ' + width + " " + height +
+      '" role="img" aria-label="Como o tempo de emissão cresceu desde 2022">';
     months.forEach(function (month, i) {
       var barHeight = max ? (month.airtime_s / max) * (height - padBottom - 6) : 0;
       svg += '<rect x="' + (i * slot + slot * 0.15).toFixed(1) +
         '" y="' + (height - padBottom - barHeight).toFixed(1) +
         '" width="' + (slot * 0.7).toFixed(1) +
         '" height="' + barHeight.toFixed(1) + '"><title>' + month.month + ": " +
-        timecode(month.airtime_s) + '</title></rect>';
-      if (months.length < 40 || i % 3 === 0) {
+        humanDuration(month.airtime_s) + "</title></rect>";
+      if (months.length < 40 || i % 4 === 0) {
         svg += '<text class="axis" x="' + (i * slot + slot / 2).toFixed(1) +
           '" y="' + (height - 8) + '" text-anchor="middle">' +
-          monthLabel(month.month) + '</text>';
+          monthLabel(month.month) + "</text>";
       }
     });
     svg += '<line class="baseline" x1="0" y1="' + (height - padBottom) +
       '" x2="' + width + '" y2="' + (height - padBottom) + '"/></svg>';
 
     panel.appendChild(el("section", {}, [
-      el("h2", { text: "Por mês" }),
+      el("h2", { text: "Como tem crescido desde 2022" }),
+      el("p", { class: "section-caption", text: "Cada barra é um mês. Quanto mais alta, mais tempo esteve no ar." }),
       el("div", { html: svg })
-    ]));
-  }
-
-  function renderPrograms(panel, topic) {
-    if (!topic.by_program.length) { return; }
-
-    var body = el("tbody");
-    topic.by_program.forEach(function (row) {
-      body.appendChild(el("tr", {}, [
-        el("td", { text: row.program || "Sem programa" }),
-        el("td", { class: "num", text: timecode(row.airtime_s) }),
-        el("td", { class: "num", text: String(row.blocks) })
-      ]));
-    });
-
-    panel.appendChild(el("section", {}, [
-      el("h2", { text: "Por programa" }),
-      el("table", {}, [
-        el("thead", {}, [
-          el("tr", {}, [
-            el("th", { text: "Programa" }),
-            el("th", { class: "num", text: "Emissão" }),
-            el("th", { class: "num", text: "Blocos" })
-          ])
-        ]),
-        body
-      ])
     ]));
   }
 
@@ -305,10 +386,13 @@
     panel.innerHTML = "";
     if (!topic) { return; }
     if (!topic.totals.blocks) { renderEmpty(panel, topic); return; }
-    renderHero(panel, topic);
-    renderSubjects(panel, topic);
-    renderMonthly(panel, topic);
-    renderPrograms(panel, topic);
+
+    var range = periodRange(topic, state.period);
+    renderPeriodSelector(panel);
+    renderHero(panel, topic, range);
+    renderProgramPie(panel, topic, range);
+    renderSubjectPie(panel, topic, range);
+    renderEvolucao(panel, topic);
   }
 
   function boot(stats) {
@@ -328,12 +412,9 @@
     })
     .then(boot)
     .catch(function () {
-      /* Estado vazio explícito. Nunca mostrar dados de exemplo: um site de
-         factos que inventa números para a demonstração perde o único
-         argumento que tem. */
       document.getElementById("panel").innerHTML =
         '<div class="empty"><h2>Dados indisponíveis</h2>' +
         '<p>Não foi possível carregar <code>data/stats.json</code>. ' +
-        'Correr <code>python -m collector.main</code> para gerar o ficheiro.</p></div>';
+        "Correr <code>python -m collector.main</code> para gerar o ficheiro.</p></div>";
     });
 })();
