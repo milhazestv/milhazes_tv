@@ -1,6 +1,6 @@
 {
  "default_attribution": "shared_equal",
- "generated_at": "2026-09-07T10:42:06+00:00",
+ "generated_at": "2026-09-07T11:32:11+00:00",
  "schema": 1,
  "topics": [
   {
@@ -899,7 +899,7 @@
    "id": "guerra",
    "last_record": "2026-09-06",
    "name": "Infotainment de Guerra",
-   "question": "Quanto tempo de emissao ocupa o comentario permanente sobre guerra?",
+   "question": "Quanto tempo de emissão ocupa o comentário permanente sobre a guerra?",
    "since": "2022-02-24",
    "sources": [
     "omny-guerra-fria",
@@ -908,7 +908,7 @@
    "subjects": [
     {
      "id": "milhazes",
-     "name": "Jose Milhazes",
+     "name": "José Milhazes",
      "role": "comentador",
      "totals": {
       "blocks": 100,
