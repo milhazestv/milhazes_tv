@@ -23,7 +23,7 @@
     { id: "all", tab: "Desde a guerra", frase: "desde o início da guerra Ucrânia-Rússia" }
   ];
 
-  var state = { stats: null, topic: null, reading: "shared_equal", period: "month" };
+  var state = { stats: null, topic: null, period: "month" };
 
   function pad(n) { return n < 10 ? "0" + n : String(n); }
 
@@ -288,7 +288,7 @@
 
     var periodo = PERIODOS.filter(function (p) { return p.id === state.period; })[0];
     var section = el("section", {}, [
-      el("h2", { text: "Em que programas apareceu" }),
+      el("h2", { text: "Em que programas aconteceu" }),
       el("p", { class: "section-caption", text: "Como se reparte o tempo " + periodo.frase + "." })
     ]);
 
@@ -301,47 +301,92 @@
     panel.appendChild(section);
   }
 
-  function renderSubjectPie(panel, topic, range) {
+  /* Barras horizontais medidas contra o tempo de emissão do período.
+     Existe uma razão de fundo para não ser um circular: no tempo no ar
+     as parcelas somam mais do que o tempo que houve de televisão, e um
+     circular afirma visualmente que as fatias são partes de um todo.
+     Seria um desenho a dizer uma coisa que os dados não dizem. */
+  function renderAirtimeBars(entries, totalAirtime) {
+    var list = el("ul", { class: "bars" });
+    entries.forEach(function (e, i) {
+      var ratio = totalAirtime > 0 ? e.seconds / totalAirtime : 0;
+      var fill = el("span", { class: "bar-fill" });
+      fill.style.width = (ratio * 100).toFixed(1) + "%";
+      fill.style.background = CORES[i % CORES.length];
+      list.appendChild(el("li", {}, [
+        el("span", { class: "bar-label", text: e.label }),
+        el("span", { class: "bar-track" }, [fill]),
+        el("span", {
+          class: "bar-value",
+          text: humanDuration(e.seconds) + " · " + Math.round(ratio * 100) + "% do tempo emitido"
+        })
+      ]));
+    });
+    return list;
+  }
+
+  /* As duas leituras aparecem ao mesmo tempo, sem botão de escolha,
+     porque não são duas versões do mesmo número: são duas perguntas
+     diferentes, e obrigar a escolher entre elas era o que tornava a
+     secção incompreensível.
+
+     Nenhum texto aqui pode assumir que há exatamente duas pessoas: o
+     número de intervenientes vem da configuração e pode mudar sem que
+     ninguém se lembre desta frase. */
+  function renderSubjects(panel, topic, range) {
     if (!topic.subjects.length) { return; }
 
-    var section = el("section", {}, [el("h2", { text: "Quem fala mais tempo" })]);
+    var totalAirtime = sumRange(topic.by_day, range.fromIso, range.toIso, "airtime_s").seconds;
+    var noAr = sumSubjectsInRange(topic, range.fromIso, range.toIso, "each_full");
+    var repartido = sumSubjectsInRange(topic, range.fromIso, range.toIso, "shared_equal");
 
-    var readings = el("div", { class: "readings" }, [el("span", { text: "Como contar:" })]);
-    [["shared_equal", "Tempo dividido"], ["each_full", "Tempo completo"]].forEach(function (pair) {
-      var button = el("button", {
-        class: "reading-btn",
-        type: "button",
-        "aria-pressed": String(state.reading === pair[0]),
-        text: pair[1]
-      });
-      button.addEventListener("click", function () {
-        state.reading = pair[0];
-        renderPanel();
-      });
-      readings.appendChild(button);
-    });
-    section.appendChild(readings);
+    function entriesFrom(totals) {
+      return topic.subjects
+        .map(function (subject) {
+          return { label: subject.name, seconds: totals[subject.id] || 0 };
+        })
+        .filter(function (e) { return e.seconds > 0; })
+        .sort(function (a, b) { return b.seconds - a.seconds; });
+    }
+
+    var section = el("section", {}, [el("h2", { text: "Quem esteve mais tempo no ar" })]);
+
+    var noArEntries = entriesFrom(noAr);
+    if (!noArEntries.length) {
+      section.appendChild(el("p", { class: "section-caption", text: "Sem dados para este período." }));
+      panel.appendChild(section);
+      return;
+    }
+
     section.appendChild(el("p", {
       class: "section-caption",
-      text: state.reading === "shared_equal"
-        ? "Quando os dois aparecem juntos, o tempo é dividido a meio entre eles."
-        : "Quando os dois aparecem juntos, cada um fica com o tempo todo do bloco."
+      text: "Quanto tempo cada pessoa esteve no ar. Um bloco com mais do que "
+        + "uma pessoa conta por inteiro para cada uma delas, porque todas "
+        + "estiveram lá o tempo todo. Por isso estes tempos sobrepõem-se e "
+        + "não se somam."
     }));
+    section.appendChild(renderAirtimeBars(noArEntries, totalAirtime));
 
-    var totals = sumSubjectsInRange(topic, range.fromIso, range.toIso, state.reading);
-    var entries = topic.subjects
-      .map(function (subject) {
-        return { label: subject.name, seconds: totals[subject.id] || 0 };
-      })
-      .filter(function (e) { return e.seconds > 0; })
-      .sort(function (a, b) { return b.seconds - a.seconds; });
-
-    var pie = renderPie(entries, { ariaLabel: "Tempo por pessoa" });
+    var repartidoEntries = entriesFrom(repartido);
+    var pie = renderPie(repartidoEntries, { ariaLabel: "Tempo repartido por pessoa" });
     if (pie) {
+      var somado = repartidoEntries.reduce(function (sum, e) { return sum + e.seconds; }, 0);
+      section.appendChild(el("h3", { class: "subhead", text: "E se dividirmos o tempo entre quem lá esteve" }));
+      section.appendChild(el("p", {
+        class: "section-caption",
+        text: "A mesma emissão, repartida: cada bloco é dividido em partes "
+          + "iguais pelas pessoas presentes. Esta é a leitura que fecha as "
+          + "contas, porque a soma dá " + humanDuration(somado)
+          + ", ou seja, o tempo que foi mesmo para o ar."
+      }));
       section.appendChild(pie);
-    } else {
-      section.appendChild(el("p", { class: "section-caption", text: "Sem dados para este período." }));
+      section.appendChild(el("p", {
+        class: "section-caption example",
+        text: "Exemplo: num bloco de 20 minutos com duas pessoas, cada uma "
+          + "esteve no ar 20 minutos, e a cada uma cabem 10 minutos."
+      }));
     }
+
     panel.appendChild(section);
   }
 
@@ -391,13 +436,12 @@
     renderPeriodSelector(panel);
     renderHero(panel, topic, range);
     renderProgramPie(panel, topic, range);
-    renderSubjectPie(panel, topic, range);
+    renderSubjects(panel, topic, range);
     renderEvolucao(panel, topic);
   }
 
   function boot(stats) {
     state.stats = stats;
-    state.reading = stats.default_attribution || "shared_equal";
     state.topic = stats.topics.length ? stats.topics[0].id : null;
     document.getElementById("generated").textContent =
       "Última recolha: " + stats.generated_at.replace("T", " ").replace("+00:00", " UTC");

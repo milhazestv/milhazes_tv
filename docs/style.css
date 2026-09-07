@@ -219,6 +219,61 @@ svg.pie path, svg.pie circle { stroke: var(--paper); stroke-width: 2; }
 .pie-legend-label { font-weight: 600; }
 .pie-legend-value { color: var(--ink-soft); font-size: 0.9rem; margin-left: auto; text-align: right; }
 
+/* Barras horizontais do tempo no ar. Medidas contra o tempo total de
+   emissao do periodo, nao umas contra as outras: e isso que torna
+   visivel que as barras se sobrepoem em vez de repartirem um todo. */
+.bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bars li {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr;
+  align-items: center;
+  column-gap: 0.9rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.bars li:last-child { border-bottom: 0; }
+
+.bar-label { font-weight: 600; }
+
+.bar-track {
+  background: var(--panel);
+  height: 0.85rem;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bar-fill { display: block; height: 100%; }
+
+.bar-value {
+  grid-column: 2;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  padding-top: 0.15rem;
+}
+
+@media (max-width: 30rem) {
+  .bars li { grid-template-columns: 1fr; row-gap: 0.3rem; }
+  .bar-value { grid-column: 1; }
+}
+
+.subhead {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 2.25rem 0 0;
+}
+
+.section-caption.example {
+  margin: 1rem 0 0;
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--rule);
+}
+
 .chart { width: 100%; height: auto; display: block; }
 .chart rect { fill: var(--bar-1); }
 .chart .axis { fill: var(--ink-soft); font-size: 10px; font-family: var(--mono); }
